@@ -2,3 +2,37 @@
 :global(body):has(.shell)>div>header,:global(body):has(.shell)>div>nav{display:none}
 :global(body):has(.shell)>div>main{min-height:100vh;padding-bottom:0}
 @media(max-width:560px){.headingRow{flex-direction:column}.headingRow>*{max-width:100%}}
+
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .shell{background:var(--rv-bg);color:var(--rv-ink)}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .sidebar,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .topbar,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .stat,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .panel,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .projectCard,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .proposalCard,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .reviewCard,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .messageLayout,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .conversation,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .input,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .textarea,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .select,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .outlineButton{background:var(--rv-surface);color:var(--rv-ink);border-color:var(--rv-border)}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .search,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .messages,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .bubble,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .miniStats div,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .table th,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .chip{background:var(--rv-surface-muted);color:var(--rv-ink);border-color:var(--rv-border)}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .bubbleOwn,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .conversation:hover,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .conversationActive{background:var(--rv-terracotta-soft)}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .donut:after{background:var(--rv-surface)}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .title,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .panelTitle,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .statValue,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .table strong,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .projectInfo h3{color:var(--rv-ink)}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .subtitle,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .muted,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .meta,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .statTop{color:var(--rv-ink-2)}

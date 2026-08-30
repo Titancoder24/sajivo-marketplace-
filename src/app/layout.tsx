@@ -33,6 +33,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("sajivo-theme");var l=localStorage.getItem("sajivo-language");if(t!=="light"&&t!=="grey"&&t!=="dark")t="light";if(l!=="hi")l="en";document.documentElement.dataset.theme=t;document.documentElement.dataset.language=l;document.documentElement.lang=l;}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.language="en";}})();`,
+          }}
+        />
+      </head>
       <body className={`${manrope.variable} antialiased`}>
         {children}
         <ProductAnalytics />

@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
 
 const MAX_TEXTS = 80;
-const MAX_LENGTH = 240;
+const MAX_LENGTH = 450;
+const BATCH_LENGTH = 430;
+const SEPARATOR = "\n|||\n";
+
+async function translateBatch(texts: string[]) {
+  const url = new URL("https://api.mymemory.translated.net/get");
+  url.searchParams.set("langpair", "en|hi");
+  url.searchParams.set("q", texts.join(SEPARATOR));
+  const response = await fetch(url, { next: { revalidate: 604_800 } });
+  if (!response.ok) return null;
+  const payload = await response.json().catch(() => null) as { responseData?: { translatedText?: string }; responseStatus?: number } | null;
+  const translated = payload?.responseData?.translatedText;
+  if (!translated || payload?.responseStatus !== 200) return null;
+  const parts = translated.split(/\s*\|\|\|\s*/);
+  return parts.length === texts.length ? parts.map((part) => part.trim()) : null;
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as { texts?: unknown } | null;
@@ -10,21 +25,22 @@ export async function POST(request: Request) {
     : [];
   if (!texts.length) return NextResponse.json({ translations: [] });
 
-  const translations = await Promise.all(texts.map(async (text) => {
+  const translations = [...texts];
+  const batches: Array<{ indexes: number[]; texts: string[] }> = [];
+  texts.forEach((text, index) => {
+    const current = batches.at(-1);
+    const nextLength = (current?.texts.join(SEPARATOR).length ?? 0) + SEPARATOR.length + text.length;
+    if (!current || nextLength > BATCH_LENGTH) batches.push({ indexes: [index], texts: [text] });
+    else { current.indexes.push(index); current.texts.push(text); }
+  });
+
+  for (const batch of batches) {
     try {
-      const url = new URL("https://translate.googleapis.com/translate_a/single");
-      url.searchParams.set("client", "gtx");
-      url.searchParams.set("sl", "en");
-      url.searchParams.set("tl", "hi");
-      url.searchParams.set("dt", "t");
-      url.searchParams.set("q", text);
-      const response = await fetch(url, { next: { revalidate: 86_400 } });
-      if (!response.ok) return text;
-      const payload = await response.json() as Array<Array<[string]>>;
-      return payload[0]?.map((part) => part[0]).join("") || text;
+      const translated = await translateBatch(batch.texts);
+      translated?.forEach((value, index) => { translations[batch.indexes[index]] = value; });
     } catch {
-      return text;
+      // Keep the English source if the translation provider is unavailable.
     }
-  }));
+  }
   return NextResponse.json({ translations }, { headers: { "cache-control": "public, max-age=86400" } });
 }

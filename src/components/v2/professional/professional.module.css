@@ -380,3 +380,44 @@
   .folderGrid { grid-template-columns: 1fr; }
   .button, .buttonDark, .buttonPrimary { padding: 0 11px; }
 }
+
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .shell {
+  --ink: var(--rv-ink);
+  --muted: var(--rv-ink-2);
+  --line: var(--rv-border);
+  --page: var(--rv-bg);
+  background: var(--rv-bg);
+  color: var(--rv-ink);
+}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .topbar,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .stat,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .panel,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .tabs,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .projectCard,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .folder,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .button,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .iconButton,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .referButton,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .tableAction,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .field input,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .field select,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .mobileNav {
+  background: var(--rv-surface);
+  color: var(--rv-ink);
+  border-color: var(--rv-border);
+}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .search,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .table th,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .track,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .progress,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .listItemIcon {
+  background: var(--rv-surface-muted);
+  color: var(--rv-ink-2);
+}
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .donut::after { background: var(--rv-surface); }
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .statLabel,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .table td,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .table strong,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .field label,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .listText strong,
+:global(html:is([data-theme="grey"],[data-theme="dark"])) .projectCard h3 { color: var(--rv-ink); }

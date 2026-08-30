@@ -12,72 +12,93 @@ const hindi: Record<string, string> = {
 const instance = i18next.createInstance({ fallbackLng: "en", resources: { en: { translation: {} }, hi: { translation: hindi } }, interpolation: { escapeValue: false } });
 void instance.init();
 
-type SourceNode = Text | HTMLElement;
+type TranslatableAttribute = "placeholder" | "aria-label" | "title";
+type TranslationTarget = { node: Text; source: string } | { node: HTMLElement; attribute: TranslatableAttribute; source: string };
+const originalText = new WeakMap<Text, string>();
+const CACHE_KEY = "sajivo-hi-cache-v1";
+let translationInProgress: Promise<void> | null = null;
+let rerunRequested = false;
 
-function collectSourceNodes() {
-  const nodes: SourceNode[] = [];
+function collectTargets() {
+  const targets: TranslationTarget[] = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const node = walker.currentNode as Text;
     const parent = node.parentElement;
     const value = node.textContent?.trim();
     if (!parent || !value || value.length < 2 || parent.closest("script,style,noscript,svg")) continue;
-    nodes.push(node);
+    const source = originalText.get(node) ?? value;
+    if (!originalText.has(node) && !/[\u0900-\u097F]/.test(value)) originalText.set(node, value);
+    if (!/[\u0900-\u097F]/.test(source)) targets.push({ node, source });
   }
-  document.querySelectorAll<HTMLElement>("input,textarea,[aria-label],[title]").forEach((element) => nodes.push(element));
-  return nodes;
-}
-
-function sourceValue(node: SourceNode) {
-  if (node instanceof HTMLElement) return node.getAttribute("placeholder") ?? node.getAttribute("aria-label") ?? node.getAttribute("title") ?? "";
-  return node.textContent?.trim() ?? "";
-}
-
-function setTranslatedValue(node: SourceNode, translated: string) {
-  if (node instanceof HTMLElement) {
-    for (const attribute of ["placeholder", "aria-label", "title"]) {
-      const original = node.getAttribute(`data-sajivo-${attribute}`);
-      if (original) node.setAttribute(attribute, translated === original ? original : translated);
+  document.querySelectorAll<HTMLElement>("input,textarea,[aria-label],[title]").forEach((node) => {
+    for (const typedAttribute of ["placeholder", "aria-label", "title"] as const) {
+      const current = node.getAttribute(typedAttribute);
+      if (!current) continue;
+      const dataAttribute = `data-sajivo-${typedAttribute}`;
+      const source = node.getAttribute(dataAttribute) ?? current;
+      if (!node.hasAttribute(dataAttribute) && !/[\u0900-\u097F]/.test(current)) node.setAttribute(dataAttribute, current);
+      if (!/[\u0900-\u097F]/.test(source)) targets.push({ node, attribute: typedAttribute, source });
     }
-    return;
-  }
-  const original = node.textContent?.trim() ?? "";
-  if (original && node.textContent) node.textContent = node.textContent.replace(original, translated);
+  });
+  return targets;
 }
 
 async function translateUnmapped(values: string[]) {
   if (!values.length) return new Map<string, string>();
-  const result = new Map<string, string>();
-  for (let index = 0; index < values.length; index += 30) {
-    const batch = values.slice(index, index + 30);
+  let stored: Record<string, string> = {};
+  try { stored = JSON.parse(window.localStorage.getItem(CACHE_KEY) ?? "{}"); } catch { stored = {}; }
+  const result = new Map<string, string>(values.filter((value) => stored[value]).map((value) => [value, stored[value]]));
+  const missing = values.filter((value) => !result.has(value));
+  for (let index = 0; index < missing.length; index += 30) {
+    const batch = missing.slice(index, index + 30);
     try {
       const response = await fetch("/api/translate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ texts: batch }) });
       if (!response.ok) continue;
       const payload = await response.json() as { translations?: string[] };
-      batch.forEach((value, batchIndex) => result.set(value, payload.translations?.[batchIndex] ?? value));
+      batch.forEach((value, batchIndex) => {
+        const translated = payload.translations?.[batchIndex] ?? value;
+        result.set(value, translated);
+        if (translated !== value) stored[value] = translated;
+      });
     } catch {
       // Keep original copy when the translation provider is temporarily unavailable.
     }
   }
+  try { window.localStorage.setItem(CACHE_KEY, JSON.stringify(stored)); } catch { /* Storage can be unavailable in private browsing. */ }
   return result;
+}
+
+async function runTranslation() {
+  const targets = collectTargets();
+  const values = [...new Set(targets.map(({ source }) => source).filter(Boolean))];
+  const language = "hi" as const;
+  const translate = (value: string) => instance.t(value, { lng: language }) as string;
+  const unmapped = values.filter((value) => translate(value) === value);
+  const remote = await translateUnmapped(unmapped);
+  targets.forEach((target) => {
+    const translated = translate(target.source) === target.source ? (remote.get(target.source) ?? target.source) : translate(target.source);
+    if (!("attribute" in target)) {
+      const current = target.node.textContent ?? "";
+      const trimmed = current.trim();
+      if (trimmed && trimmed !== translated) target.node.textContent = current.replace(trimmed, translated);
+    } else if (target.node.getAttribute(target.attribute) !== translated) {
+      target.node.setAttribute(target.attribute, translated);
+    }
+  });
 }
 
 export async function translatePage(language: "en" | "hi") {
   if (language === "en") return;
-  const nodes = collectSourceNodes();
-  const values = [...new Set(nodes.map(sourceValue).filter(Boolean))];
-  const translate = (value: string) => instance.t(value, { lng: language }) as string;
-  const unmapped = values.filter((value) => translate(value) === value && !/[\u0900-\u097F]/.test(value));
-  const remote = await translateUnmapped(unmapped);
-  nodes.forEach((node) => {
-    const value = sourceValue(node);
-    if (!value) return;
-    if (node instanceof HTMLElement) {
-      for (const attribute of ["placeholder", "aria-label", "title"]) {
-        const original = node.getAttribute(attribute);
-        if (original) node.setAttribute(`data-sajivo-${attribute}`, original);
-      }
-    }
-    setTranslatedValue(node, translate(value) === value ? (remote.get(value) ?? value) : translate(value));
-  });
+  if (translationInProgress) {
+    rerunRequested = true;
+    return translationInProgress;
+  }
+  translationInProgress = (async () => {
+    do {
+      rerunRequested = false;
+      await runTranslation();
+    } while (rerunRequested);
+  })().finally(() => { translationInProgress = null; });
+  return translationInProgress;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Contrast, Languages, Moon, Sun } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { translatePage } from "@/lib/i18n";
 
@@ -14,6 +15,7 @@ const themes: Array<{ id: Theme; label: string; icon: typeof Sun }> = [
 ];
 
 export function AppPreferences() {
+  const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>("light");
   const [language, setLanguage] = useState<Language>("en");
   const [ready, setReady] = useState(false);
@@ -29,25 +31,32 @@ export function AppPreferences() {
   useEffect(() => {
     if (!ready) return;
     document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.language = language;
     document.documentElement.lang = language === "hi" ? "hi" : "en";
     window.localStorage.setItem("sajivo-theme", theme);
     window.localStorage.setItem("sajivo-language", language);
     if (language === "hi") {
-      let timer = window.setTimeout(() => void translatePage("hi"), 80);
+      let timer = window.setTimeout(() => void translatePage("hi"), 30);
       const observer = new MutationObserver(() => {
         window.clearTimeout(timer);
-        timer = window.setTimeout(() => void translatePage("hi"), 120);
+        timer = window.setTimeout(() => void translatePage("hi"), 80);
       });
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["placeholder", "aria-label", "title"] });
       return () => { observer.disconnect(); window.clearTimeout(timer); };
     }
-  }, [theme, language, ready]);
+  }, [theme, language, pathname, ready]);
+
+  function selectTheme(nextTheme: Theme) {
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem("sajivo-theme", nextTheme);
+    setTheme(nextTheme);
+  }
 
   return (
     <aside className="fixed bottom-[78px] right-[68px] z-[70] flex items-center gap-1 rounded-lg border border-[var(--rv-border)] bg-[var(--rv-surface)]/95 p-1 shadow-lg backdrop-blur sm:bottom-5 sm:right-[72px] sm:top-auto" aria-label="Appearance and language preferences">
       <div className="flex items-center gap-0.5" role="group" aria-label="Choose theme">
         {themes.map(({ id, label, icon: Icon }) => (
-          <button key={id} type="button" onClick={() => setTheme(id)} aria-label={`${label} theme`} aria-pressed={theme === id} title={`${label} theme`} className={`grid h-8 w-8 place-items-center rounded-full transition ${theme === id ? "bg-[var(--rv-terracotta)] text-white" : "text-[var(--rv-ink-2)] hover:bg-[var(--rv-bg)]"}`}>
+          <button key={id} type="button" onClick={() => selectTheme(id)} aria-label={`${label} theme`} aria-pressed={theme === id} title={`${label} theme`} className={`grid h-8 w-8 place-items-center rounded-full transition ${theme === id ? "bg-[var(--rv-terracotta)] text-white" : "text-[var(--rv-ink-2)] hover:bg-[var(--rv-bg)]"}`}>
             <Icon size={15} />
           </button>
         ))}

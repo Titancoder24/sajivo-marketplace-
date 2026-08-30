@@ -73,6 +73,55 @@ html[data-theme="grey"] body {
   color-scheme: dark;
 }
 
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="grey"] body,
+html[data-theme="dark"] body > div,
+html[data-theme="grey"] body > div {
+  background-color: var(--rv-bg);
+  color: var(--rv-ink);
+}
+
+/* Normalize legacy light utility colors so every route follows the selected canvas. */
+html:is([data-theme="dark"], [data-theme="grey"]) :is(
+  [class*="bg-white"],
+  [class*="bg-[#f6"], [class*="bg-[#f7"], [class*="bg-[#f8"], [class*="bg-[#fa"], [class*="bg-[#fb"], [class*="bg-[#fc"]
+) {
+  background-color: var(--rv-surface) !important;
+}
+
+html:is([data-theme="dark"], [data-theme="grey"]) :is(
+  [class*="bg-[#d7"], [class*="bg-[#d8"],
+  [class*="bg-[#e0"], [class*="bg-[#e4"], [class*="bg-[#e5"], [class*="bg-[#e6"], [class*="bg-[#e7"], [class*="bg-[#e8"], [class*="bg-[#e9"], [class*="bg-[#ea"], [class*="bg-[#eb"], [class*="bg-[#ec"], [class*="bg-[#ed"], [class*="bg-[#ee"],
+  [class*="bg-[#f0"], [class*="bg-[#f1"], [class*="bg-[#f2"], [class*="bg-[#f3"], [class*="bg-[#f4"], [class*="bg-[#f5"]
+):not([class*="bg-[#e74925]"]):not([class*="bg-[#ec4f1c]"]):not([class*="bg-[#e84"]):not([class*="bg-[#f15317]"]) {
+  background-color: var(--rv-surface-muted) !important;
+}
+
+html:is([data-theme="dark"], [data-theme="grey"]) :is(
+  [class*="text-[#111827]"], [class*="text-[#171b20]"], [class*="text-[#17201d]"], [class*="text-[#17211d]"],
+  [class*="text-[#19221e]"], [class*="text-[#1c2421]"], [class*="text-[#1c2723]"], [class*="text-[#1d2824]"],
+  [class*="text-[#1e2024]"], [class*="text-[#202020]"], [class*="text-[#202126]"], [class*="text-[#202521]"],
+  [class*="text-[#222]"], [class*="text-[#242424]"], [class*="text-[#252525]"], [class*="text-[#252a31]"],
+  [class*="text-[#26312c]"], [class*="text-[#272b32]"], [class*="text-[#282a2f]"], [class*="text-[#29332f]"],
+  [class*="text-[#303238]"], [class*="text-[#333]"], [class*="text-[#343840]"], [class*="text-[#35413b]"],
+  [class*="text-[#385044]"], [class*="text-[#3f5149]"], [class*="text-[#40464d]"], [class*="text-[#414b46]"],
+  [class*="text-[#444]"], [class*="text-[#453630]"], [class*="text-[#46514c]"], [class*="text-[#4d5753]"],
+  [class*="text-[#4f5955]"], [class*="text-[#505a56]"]
+) {
+  color: var(--rv-ink) !important;
+}
+
+html:is([data-theme="dark"], [data-theme="grey"]) :is(
+  [class*="border-[#ccd"], [class*="border-[#d5"], [class*="border-[#d6"], [class*="border-[#d8"], [class*="border-[#dc"], [class*="border-[#de"], [class*="border-[#df"],
+  [class*="border-[#e0"], [class*="border-[#e1"], [class*="border-[#e2"], [class*="border-[#e3"], [class*="border-[#e4"], [class*="border-[#e5"], [class*="border-[#e6"], [class*="border-[#e7"], [class*="border-[#e8"], [class*="border-[#e9"], [class*="border-[#ec"], [class*="border-[#ed"], [class*="border-[#ee"], [class*="border-[#ef"], [class*="border-[#f0"]
+):not([class*="border-[#e74925]"]):not([class*="border-[#ec4f1c]"]):not([class*="border-[#ed835f]"]):not([class*="border-[#ec7954]"]) {
+  border-color: var(--rv-border) !important;
+}
+
 html[data-theme="dark"] .bg-white,
 html[data-theme="grey"] .bg-white {
   background-color: var(--rv-surface) !important;
@@ -114,6 +163,11 @@ html[data-theme="grey"] textarea,
 html[data-theme="grey"] select {
   background-color: var(--rv-surface-muted);
   color: var(--rv-ink);
+}
+
+html:is([data-theme="dark"], [data-theme="grey"]) input::placeholder,
+html:is([data-theme="dark"], [data-theme="grey"]) textarea::placeholder {
+  color: var(--rv-ink-3);
 }
 
 button,

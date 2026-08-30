@@ -6,6 +6,12 @@ export async function updateSession(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
+    if (request.nextUrl.pathname.startsWith("/v2/") || request.nextUrl.pathname.includes("/dashboard")) {
+      const login = request.nextUrl.clone();
+      login.pathname = "/login";
+      login.searchParams.set("status", "configuration_error");
+      return NextResponse.redirect(login);
+    }
     return NextResponse.next({ request });
   }
 
@@ -25,6 +31,18 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const pathname = request.nextUrl.pathname;
+  const protectedV2 = pathname.startsWith("/v2/") && pathname !== "/v2/register";
+  if (protectedV2) {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      const login = request.nextUrl.clone();
+      login.pathname = "/login";
+      login.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(login);
+    }
+  } else {
+    await supabase.auth.getClaims();
+  }
   return response;
 }

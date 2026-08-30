@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { PwaRegister } from "@/components/sajivo/PwaRegister";
 import { SoundExperience } from "@/components/sajivo/SoundExperience";
 import { AppPreferences } from "@/components/sajivo/AppPreferences";
+import { ProductAnalytics } from "@/components/analytics/ProductAnalytics";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -31,9 +32,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${manrope.variable} antialiased`}>
         {children}
+        <ProductAnalytics />
         <AppPreferences />
         <SoundExperience />
         <PwaRegister />

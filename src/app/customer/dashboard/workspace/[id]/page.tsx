@@ -1,6 +1,5 @@
-import { DashboardHeader } from "@/components/sajivo/DashboardBlocks";
-import { WorkspaceView } from "@/features/workspace/WorkspaceView";
+import { redirect } from "next/navigation";
 
-export default function CustomerWorkspacePage() {
-  return <><DashboardHeader title="Project Workspace" text="Messages, files, activity, status updates, and final review live here." /><WorkspaceView /></>;
+export default async function CustomerWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
+  redirect(`/v2/projects/${(await params).id}`);
 }

@@ -15,7 +15,7 @@ export const roleDashboardPath: Record<UserRole, string> = {
   designer: "/designer/dashboard",
   contractor: "/contractor/dashboard",
   vendor: "/vendor/dashboard",
-  admin: "/dashboard",
+  admin: "/v2/admin",
 };
 
 export const projectStatusLabels: Record<ProjectStatus, string> = {

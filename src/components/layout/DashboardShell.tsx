@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   BriefcaseBusiness,
@@ -96,6 +96,7 @@ function isActive(pathname: string, href: string, dashboardRoot: string) {
 
 export function DashboardShell({ role, children, userName: suppliedUserName, businessName: suppliedBusinessName, unreadNotifications = 0 }: { role: UserRole; children: React.ReactNode; userName?: string; businessName?: string; unreadNotifications?: number }) {
   const pathname = usePathname();
+  const router = useRouter();
   const userName = suppliedUserName ?? "Sajivo member";
   const businessName = suppliedBusinessName ?? (role === "customer" ? "Homeowner workspace" : `${roleLabels[role]} workspace`);
   const navLinks = linksFor(role);
@@ -104,6 +105,11 @@ export function DashboardShell({ role, children, userName: suppliedUserName, bus
   const mobileLinks = role === "customer"
     ? [navLinks[0], navLinks[1], navLinks[2], navLinks[3]]
     : [navLinks[0], navLinks[1], navLinks[2], navLinks[3]];
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f7f8] text-[#202124]">
@@ -158,7 +164,7 @@ export function DashboardShell({ role, children, userName: suppliedUserName, bus
 
         <div className="border-t border-[#e6e7e9] p-3">
           <Link href={`${root}/support`} className="flex h-9 items-center gap-3 rounded-md px-2.5 text-[13px] text-[#6f7277] hover:bg-[#f0f0f2]"><HelpCircle size={16} />Help & support</Link>
-          <Link href="/login" className="flex h-9 items-center gap-3 rounded-md px-2.5 text-[13px] text-[#6f7277] hover:bg-[#f0f0f2]"><LogOut size={16} />Log out</Link>
+          <button type="button" onClick={logout} className="flex h-9 w-full items-center gap-3 rounded-md px-2.5 text-left text-[13px] text-[#6f7277] hover:bg-[#f0f0f2]"><LogOut size={16} />Log out</button>
         </div>
       </aside>
 

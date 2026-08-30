@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { RegisterForm } from "@/features/auth/AuthForms";
 
@@ -12,6 +13,7 @@ export default function RegisterPage() {
           <div className="mt-6">
             <Suspense><RegisterForm /></Suspense>
           </div>
+          <p className="mt-5 text-center text-sm text-[var(--rv-ink-2)]">Already have an account? <Link href="/login" className="font-bold text-[var(--rv-ink)] underline underline-offset-4">Log in</Link></p>
         </CardContent>
       </Card>
     </section>

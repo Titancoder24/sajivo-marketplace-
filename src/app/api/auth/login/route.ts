@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { profiles } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -7,24 +6,14 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) {
-      // Keep the documented demo account usable in preview deployments where
-      // the seed user has not been created in the connected Supabase project.
-      const demo = profiles.find((item) => item.email.toLowerCase() === String(email).toLowerCase());
-      if (demo && password === "Demo@123") {
-        const response = NextResponse.json({ ok: true, role: demo.primaryRole, demo: true });
-        response.cookies.set("sajivo-demo-role", demo.primaryRole, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 8 });
-        return response;
-      }
-      return NextResponse.json({ error: error?.message ?? "Invalid email or password" }, { status: 401 });
-    }
-    const { data: profile } = await supabase.from("profiles").select("primary_role").eq("id", data.user.id).maybeSingle();
-    // The profile trigger may be deployed just after Auth. Metadata keeps a newly
-    // registered user moving while the profile row is created by the database.
-    const metadataRole = data.user.user_metadata?.primary_role;
-    const role = profile?.primary_role ?? (metadataRole === "designer" || metadataRole === "contractor" || metadataRole === "vendor" || metadataRole === "admin" ? metadataRole : "customer");
-    return NextResponse.json({ ok: true, role });
+    if (error || !data.user) return NextResponse.json({ error: error?.message ?? "Invalid email or password" }, { status: 401 });
+    const [{ data: profile, error: profileError }, { data: platformAdmin }] = await Promise.all([
+      supabase.from("profiles").select("primary_role").eq("id", data.user.id).maybeSingle(),
+      supabase.from("platform_admins").select("role, status").eq("profile_id", data.user.id).eq("status", "active").maybeSingle(),
+    ]);
+    if (platformAdmin) return NextResponse.json({ ok: true, role: "admin" });
+    if (profileError || !profile) return NextResponse.json({ error: "Your Sajivo profile is not ready. Please contact support." }, { status: 503 });
+    return NextResponse.json({ ok: true, role: profile.primary_role });
   }
-  const profile = profiles.find((item) => item.email.toLowerCase() === String(email).toLowerCase()) ?? profiles[0];
-  return NextResponse.json({ ok: true, role: profile.primaryRole, demo: true });
+  return NextResponse.json({ error: "Authentication is not configured." }, { status: 503 });
 }

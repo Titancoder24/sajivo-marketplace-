@@ -47,14 +47,19 @@ function setTranslatedValue(node: SourceNode, translated: string) {
 
 async function translateUnmapped(values: string[]) {
   if (!values.length) return new Map<string, string>();
-  try {
-    const response = await fetch("/api/translate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ texts: values }) });
-    if (!response.ok) return new Map<string, string>();
-    const payload = await response.json() as { translations?: string[] };
-    return new Map(values.map((value, index) => [value, payload.translations?.[index] ?? value]));
-  } catch {
-    return new Map<string, string>();
+  const result = new Map<string, string>();
+  for (let index = 0; index < values.length; index += 30) {
+    const batch = values.slice(index, index + 30);
+    try {
+      const response = await fetch("/api/translate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ texts: batch }) });
+      if (!response.ok) continue;
+      const payload = await response.json() as { translations?: string[] };
+      batch.forEach((value, batchIndex) => result.set(value, payload.translations?.[batchIndex] ?? value));
+    } catch {
+      // Keep original copy when the translation provider is temporarily unavailable.
+    }
   }
+  return result;
 }
 
 export async function translatePage(language: "en" | "hi") {

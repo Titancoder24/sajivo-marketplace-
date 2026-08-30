@@ -1,6 +1,5 @@
-import { notifications, portfolioProjects, profiles, projects, proposals, reviews, services } from "@/lib/demo-data";
+import { services } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import type { Profile, Project, Proposal, UserRole } from "@/types/domain";
 
 function toProfile(row: Record<string, unknown>): Profile {
@@ -99,7 +98,7 @@ export async function getServices() {
 
 export async function getProfessionals(role?: UserRole | "all") {
   const supabase = await createClient();
-  if (!supabase) return profiles.filter((profile) => profile.primaryRole === "designer" || profile.primaryRole === "contractor");
+  if (!supabase) return [];
   let query = supabase.from("profiles").select("*").in("primary_role", ["designer", "contractor"]).eq("account_status", "active");
   if (role && role !== "all") query = query.eq("primary_role", role);
   const { data, error } = await query.order("rating_avg", { ascending: false });
@@ -109,10 +108,7 @@ export async function getProfessionals(role?: UserRole | "all") {
 
 export async function getProjectsForRole(role: UserRole) {
   const supabase = await createClient();
-  if (!supabase) {
-    if (role === "customer") return projects;
-    return projects.filter((project) => ["published", "receiving_proposals", "matching", "in_progress"].includes(project.status));
-  }
+  if (!supabase) return [];
   const discoverable = ["published", "receiving_proposals", "matching"];
   const query = role === "customer"
     ? supabase.from("projects").select("*, files_count:project_files(count), proposals_count:proposals(count)").order("created_at", { ascending: false })
@@ -122,11 +118,11 @@ export async function getProjectsForRole(role: UserRole) {
   return data.map(toProject);
 }
 
-export async function getProjectById(id: string) {
+export async function getProjectById(id: string): Promise<Project | null> {
   const supabase = await createClient();
-  if (!supabase || id.startsWith("demo-")) return projects.find((project) => project.id === id) ?? { ...projects[0], id };
+  if (!supabase) return null;
   const { data, error } = await supabase.from("projects").select("*, files_count:project_files(count), proposals_count:proposals(count)").eq("id", id).single();
-  if (error || !data) return { ...projects[0], id };
+  if (error || !data) return null;
   return toProject(data);
 }
 
@@ -148,14 +144,14 @@ export async function getDashboardSummary(role: UserRole) {
   return {
     activeProjects: roleProjects.filter((project) => ["professional_selected", "discussion", "in_progress", "awaiting_customer_review"].includes(project.status)).length,
     publishedProjects: roleProjects.filter((project) => ["published", "receiving_proposals", "matching"].includes(project.status)).length,
-    proposals: proposals.length,
-    unreadNotifications: notifications.filter((notification) => !notification.readAt).length,
+    proposals: 0,
+    unreadNotifications: 0,
   };
 }
 
 export async function getProposals(role: UserRole) {
   const supabase = await createClient();
-  if (!supabase) return role === "customer" ? proposals : proposals.filter((proposal) => proposal.professionalRole === role);
+  if (!supabase) return [];
   let query = supabase.from("proposals").select("*, professional:profiles!proposals_professional_id_fkey(full_name)").order("created_at", { ascending: false });
   if (role !== "customer" && role !== "admin") query = query.eq("professional_role", role);
   const { data, error } = await query;
@@ -165,7 +161,7 @@ export async function getProposals(role: UserRole) {
 
 export async function getNotifications() {
   const supabase = await createClient();
-  if (!supabase) return notifications;
+  if (!supabase) return [];
   const { data, error } = await supabase.from("notifications").select("*").order("created_at", { ascending: false });
   if (error || !data) return [];
   return data.map((row) => ({ id: row.id, userId: row.user_id, projectId: row.project_id ?? undefined, kind: row.kind, message: row.message, readAt: row.read_at, createdAt: row.created_at }));
@@ -173,24 +169,27 @@ export async function getNotifications() {
 
 export async function getCurrentProfile() {
   const supabase = await createClient();
-  if (!supabase) return profiles[0];
+  if (!supabase) return null;
   const { data: authData } = await supabase.auth.getUser();
-  if (!authData.user) {
-    const demoRole = (await cookies()).get("sajivo-demo-role")?.value;
-    const demoProfile = profiles.find((item) => item.primaryRole === demoRole);
-    if (demoProfile) return demoProfile;
-  }
   if (!authData.user) return null;
   const { data } = await supabase.from("profiles").select("*").eq("id", authData.user.id).single();
   return data ? toProfile(data) : null;
 }
 
 export async function getPortfolioForProfessional(id: string) {
-  return portfolioProjects.filter((project) => project.professionalId === id);
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase.from("portfolio_projects").select("*").eq("professional_id", id).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map((row) => ({ id: row.id, professionalId: row.professional_id, title: row.title, category: row.category ?? "Interior project", description: row.description ?? "", location: row.location ?? "", completionYear: row.completion_year ?? new Date(row.created_at).getFullYear(), servicesProvided: row.services_provided ?? [], isFeatured: row.is_featured ?? false }));
 }
 
 export async function getReviewsForProfessional(id: string) {
-  return reviews.filter((review) => review.professionalId === id);
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase.from("reviews").select("id, customer_id, professional_id, project_id, rating, review_text, created_at").eq("professional_id", id).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map((row) => ({ id: row.id, customerId: row.customer_id, professionalId: row.professional_id, projectId: row.project_id, rating: row.rating, reviewText: row.review_text ?? "", createdAt: row.created_at }));
 }
 
 export type VendorDashboardData = {

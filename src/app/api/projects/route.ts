@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (!result.success) return NextResponse.json({ error: result.error.issues[0]?.message ?? "Invalid project brief" }, { status: 400 });
   const body = result.data;
   const supabase = await createClient();
-  if (!supabase) return NextResponse.json({ project: { id: `demo-${crypto.randomUUID()}`, ...body, status: body.publish ? "published" : "draft" }, demo: true }, { status: 201 });
+  if (!supabase) return NextResponse.json({ error: "Project storage is unavailable. Please try again later." }, { status: 503 });
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) return NextResponse.json({ error: "Sign in with a client account to publish a project." }, { status: 401 });

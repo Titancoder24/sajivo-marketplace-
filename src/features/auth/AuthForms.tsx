@@ -20,8 +20,8 @@ function PasswordField({ id, label, value, onChange, name, autoComplete }: { id:
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("customer@sajivo.com");
-  const [password, setPassword] = useState("Demo@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(event: React.FormEvent) {
@@ -32,7 +32,9 @@ export function LoginForm() {
       const payload = await response.json();
       if (!response.ok) { toast.error(payload.error ?? "Unable to login"); return; }
       toast.success("Welcome back to Sajivo");
-      router.push(roleDashboardPath[payload.role as UserRole] ?? "/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      const safeNext = next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : null;
+      router.push(safeNext ?? (roleDashboardPath[payload.role as UserRole] ?? "/dashboard"));
     } catch {
       toast.error("We could not connect. Please try again.");
     } finally {
@@ -40,7 +42,7 @@ export function LoginForm() {
     }
   }
 
-  return <form onSubmit={submit} className="grid gap-4"><Field id="email" label="Email address" type="email" value={email} onChange={setEmail} autoComplete="email" icon={Mail} /><PasswordField id="password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" /><div className="flex items-center justify-between gap-4"><label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--rv-ink-2)]"><input type="checkbox" className="h-4 w-4 accent-[var(--rv-terracotta)]" /> Keep me signed in</label><span className="flex items-center gap-1 text-xs text-[var(--rv-ink-2)]"><ShieldCheck size={13} /> Secure login</span></div><Button className="mt-1 w-full" disabled={loading}>{loading ? <><LoaderCircle className="animate-spin" size={16} /> Signing in…</> : "Sign in"}</Button><div className="rounded-md bg-[var(--rv-bg)] p-3 text-xs leading-5 text-[var(--rv-ink-2)]"><span className="font-bold text-[var(--rv-ink)]">Demo account</span><br />Use the pre-filled credentials to explore the customer dashboard.</div></form>;
+  return <form onSubmit={submit} className="grid gap-4"><Field id="email" label="Email address" type="email" value={email} onChange={setEmail} autoComplete="email" icon={Mail} /><PasswordField id="password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" /><div className="flex items-center justify-between gap-4"><label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--rv-ink-2)]"><input type="checkbox" className="h-4 w-4 accent-[var(--rv-terracotta)]" /> Keep me signed in</label><span className="flex items-center gap-1 text-xs text-[var(--rv-ink-2)]"><ShieldCheck size={13} /> Secure login</span></div><Button className="mt-1 w-full" disabled={loading}>{loading ? <><LoaderCircle className="animate-spin" size={16} /> Signing in…</> : "Sign in"}</Button></form>;
 }
 
 const accountTypes: { value: AccountType; title: string; description: string; icon: typeof Home }[] = [
@@ -101,6 +103,27 @@ export function RegisterForm() {
 
 export function PasswordHelpForm({ mode }: { mode: "forgot" | "reset" }) {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   if (sent) return <div className="py-4 text-center" role="status"><span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-600"><Mail size={22} /></span><h2 className="font-display mt-4 text-xl">{mode === "forgot" ? "Check your email" : "Password updated"}</h2><p className="mt-2 text-sm leading-6 text-[var(--rv-ink-2)]">{mode === "forgot" ? "We sent password reset instructions to the address you provided." : "Your new password is ready. You can return to sign in."}</p></div>;
-  return <form className="grid gap-4" onSubmit={(event) => { event.preventDefault(); setSent(true); toast.success(mode === "forgot" ? "Reset instructions are ready for the configured mail provider." : "Password reset request submitted."); }}><Field id="helpEmail" name="email" label="Email address" type="email" autoComplete="email" icon={Mail} />{mode === "reset" && <PasswordField id="newPassword" name="password" label="New password" autoComplete="new-password" />}<Button className="w-full">{mode === "forgot" ? "Send reset link" : "Update password"}</Button><p className="text-center text-xs leading-5 text-[var(--rv-ink-2)]">For your security, reset links expire after 30 minutes.</p></form>;
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setLoading(true);
+    setError("");
+    try {
+      const endpoint = mode === "forgot" ? "/api/auth/forgot-password" : "/api/auth/reset-password";
+      const body = mode === "forgot" ? { email: form.get("email") } : { password: form.get("password") };
+      const response = await fetch(endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Unable to complete the request.");
+      setSent(true);
+      toast.success(mode === "forgot" ? "Password reset email sent." : "Password updated.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to complete the request.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <form className="grid gap-4" onSubmit={submit}>{mode === "forgot" && <Field id="helpEmail" name="email" label="Email address" type="email" autoComplete="email" icon={Mail} />}{mode === "reset" && <PasswordField id="newPassword" name="password" label="New password" autoComplete="new-password" />}{error && <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}<Button className="w-full" disabled={loading}>{loading ? <><LoaderCircle className="animate-spin" size={16} /> Working…</> : mode === "forgot" ? "Send reset link" : "Update password"}</Button><p className="text-center text-xs leading-5 text-[var(--rv-ink-2)]">For your security, reset links expire after 30 minutes.</p></form>;
 }

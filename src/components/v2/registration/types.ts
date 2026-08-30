@@ -1,0 +1,64 @@
+export type AccountType = "client" | "business";
+export type BusinessUse = "professional" | "vendor" | "both";
+export type ProfessionalRole = "interior_designer" | "contractor";
+export type VendorRole = "retailer" | "manufacturer" | "distributor";
+
+export type TeamMember = {
+  id: number;
+  role: string;
+  name: string;
+  mobile: string;
+  email: string;
+};
+
+export type RegistrationData = {
+  accountType: AccountType;
+  businessUse: BusinessUse;
+  professionalRole: ProfessionalRole;
+  vendorRole: VendorRole;
+  fullName: string;
+  email: string;
+  mobile: string;
+  password: string;
+  terms: boolean;
+  companyName: string;
+  brandName: string;
+  businessType: string;
+  registrationType: string;
+  pan: string;
+  gstStatus: "registered" | "composition" | "not_registered";
+  gstin: string;
+  established: string;
+  category: string;
+  subcategory: string;
+  address1: string;
+  address2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  serviceLocations: string[];
+  businessEmail: string;
+  alternateMobile: string;
+  website: string;
+  accountHolder: string;
+  bankName: string;
+  accountNumber: string;
+  ifsc: string;
+  about: string;
+  goals: string;
+  serviceCategories: string[];
+  teamMembers: TeamMember[];
+  activeProjects: string;
+  maxProjects: string;
+  projectValue: string;
+  tools: string[];
+  additionalInfo: string;
+  idType: string;
+  idName: string;
+  idNumber: string;
+  addressDocument: string;
+  documentAddress: string;
+  documentDate: string;
+};
+
+export type RegistrationErrors = Record<string, string>;

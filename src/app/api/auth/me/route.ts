@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { profiles } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -11,5 +10,5 @@ export async function GET() {
       return NextResponse.json({ profile });
     }
   }
-  return NextResponse.json({ profile: profiles[0], demo: true });
+  return NextResponse.json({ profile: null }, { status: 401 });
 }

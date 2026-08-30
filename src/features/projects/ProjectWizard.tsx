@@ -50,17 +50,17 @@ const scopeServiceNames: Record<string, string[]> = {
 
 export function ProjectWizard() {
   const [step, setStep] = useState(0);
-  const [selectedScope, setSelectedScope] = useState("single_room");
-  const [selectedSubtype, setSelectedSubtype] = useState("Living Room");
-  const [selectedRooms, setSelectedRooms] = useState<string[]>(["Living Room", "Kitchen"]);
+  const [selectedScope, setSelectedScope] = useState("");
+  const [selectedSubtype, setSelectedSubtype] = useState("");
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [customRequirement, setCustomRequirement] = useState("");
-  const [selectedServices, setSelectedServices] = useState<string[]>(["Modular Kitchen Design"]);
-  const [title, setTitle] = useState("Living room and kitchen refresh");
-  const [description, setDescription] = useState("Need a practical, warm, low-maintenance design with modular kitchen changes, TV wall, lighting, and storage.");
-  const [city, setCity] = useState("Bengaluru");
-  const [locality, setLocality] = useState("Indiranagar");
-  const [timeline, setTimeline] = useState("8-10 weeks");
-  const [budget, setBudget] = useState("Rs 5,00,000 - Rs 10,00,000");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [city, setCity] = useState("");
+  const [locality, setLocality] = useState("");
+  const [timeline, setTimeline] = useState("");
+  const [budget, setBudget] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [publishedProjectId, setPublishedProjectId] = useState<string | null>(null);
@@ -79,6 +79,10 @@ export function ProjectWizard() {
   }
 
   function validateCurrentStep() {
+    if (step === 0 && !selectedScope) {
+      toast.error("Choose a project scope to continue");
+      return false;
+    }
     if (step === 1 && selectedServices.length === 0) {
       toast.error("Select at least one service");
       return false;
@@ -91,8 +95,12 @@ export function ProjectWizard() {
       toast.error("Describe your custom requirement before continuing");
       return false;
     }
-    if (step === 2 && (!title.trim() || !description.trim() || !city.trim())) {
-      toast.error("Add a title, description, and city to continue");
+    if (step === 2 && (!title.trim() || description.trim().length < 12 || !city.trim() || timeline.trim().length < 2)) {
+      toast.error("Add a title, detailed description, city, and timeline to continue");
+      return false;
+    }
+    if (step === 3 && !budget) {
+      toast.error("Choose the closest budget range to continue");
       return false;
     }
     return true;
@@ -125,7 +133,6 @@ export function ProjectWizard() {
       return;
     }
     setStep((value) => value + 1);
-    toast.success("Draft saved");
   }
 
   if (publishedProjectId) {
@@ -173,7 +180,7 @@ export function ProjectWizard() {
               </li>
             ))}
           </ol>
-          <div className="mt-8 hidden rounded-md border border-[var(--rv-border)] bg-white p-3 text-xs leading-5 text-[var(--rv-ink-2)] lg:block"><Save className="mb-2 text-[var(--rv-terracotta)]" size={17} />Your progress is saved as you move through each step.</div>
+          <div className="mt-8 hidden rounded-md border border-[var(--rv-border)] bg-white p-3 text-xs leading-5 text-[var(--rv-ink-2)] lg:block"><Save className="mb-2 text-[var(--rv-terracotta)]" size={17} />Nothing is published until you review the brief and confirm the final step.</div>
         </aside>
 
         <div className="min-w-0">
@@ -242,7 +249,7 @@ export function ProjectWizard() {
 
           <footer className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-[var(--rv-border)] bg-white/95 px-4 py-4 backdrop-blur sm:px-8">
             <Button variant="outline" disabled={step === 0} onClick={() => setStep((value) => Math.max(0, value - 1))}><ArrowLeft size={16} /><span className="hidden sm:inline">Back</span></Button>
-            <div className="flex items-center gap-2"><Button variant="ghost" onClick={() => toast.success("Draft saved")}><Save size={16} /><span className="hidden sm:inline">Save draft</span></Button><Button onClick={next} disabled={publishing}>{publishing ? <LoaderCircle className="animate-spin" size={16} /> : step === steps.length - 1 ? <><span>Publish project</span><CheckCircle2 size={16} /></> : <><span>Continue</span><ArrowRight size={16} /></>}</Button></div>
+            <Button onClick={next} disabled={publishing}>{publishing ? <LoaderCircle className="animate-spin" size={16} /> : step === steps.length - 1 ? <><span>Publish project</span><CheckCircle2 size={16} /></> : <><span>Continue</span><ArrowRight size={16} /></>}</Button>
           </footer>
         </div>
       </div>

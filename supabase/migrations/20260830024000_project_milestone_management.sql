@@ -1,0 +1,5 @@
+create policy "project participants create milestones" on public.project_milestones for insert to authenticated
+with check (exists (select 1 from public.projects p where p.id=project_id and (select auth.uid()) in (p.customer_id,p.selected_professional_id)) or exists (select 1 from public.project_team_members tm where tm.project_id=project_id and tm.profile_id=(select auth.uid()) and tm.status='active'));
+create policy "project participants update milestones" on public.project_milestones for update to authenticated
+using (exists (select 1 from public.projects p where p.id=project_id and (select auth.uid()) in (p.customer_id,p.selected_professional_id)) or exists (select 1 from public.project_team_members tm where tm.project_id=project_id and tm.profile_id=(select auth.uid()) and tm.status='active'))
+with check (exists (select 1 from public.projects p where p.id=project_id and (select auth.uid()) in (p.customer_id,p.selected_professional_id)) or exists (select 1 from public.project_team_members tm where tm.project_id=project_id and tm.profile_id=(select auth.uid()) and tm.status='active'));

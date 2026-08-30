@@ -4,10 +4,12 @@ import { ProjectCard } from "@/components/sajivo/ProjectCard";
 import { ButtonLink } from "@/components/ui/button";
 import { getProjectById, getProposals } from "@/lib/server/repository";
 import { MessageSquareText } from "lucide-react";
+import { notFound } from "next/navigation";
 
 export default async function CustomerProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const project = await getProjectById(id);
+  if (!project) notFound();
   const projectProposals = (await getProposals("customer")).filter((proposal) => proposal.projectId === project.id);
   return (
     <>

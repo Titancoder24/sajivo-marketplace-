@@ -10,7 +10,7 @@ export default function LoginPage() {
           <h1 className="font-display text-3xl">Login to Sajivo</h1>
           <p className="mt-2 text-sm text-[var(--rv-ink-2)]">Use your customer, designer, or contractor account.</p>
           <div className="mt-6"><LoginForm /></div>
-          <Link href="/forgot-password" className="mt-4 block text-sm font-semibold text-[var(--rv-terracotta)]">Forgot password?</Link>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm"><Link href="/forgot-password" className="font-semibold text-[var(--rv-terracotta)]">Forgot password?</Link><span className="text-[var(--rv-ink-2)]">New to Sajivo? <Link href="/register" className="font-bold text-[var(--rv-ink)] underline underline-offset-4">Create account</Link></span></div>
         </CardContent>
       </Card>
     </section>

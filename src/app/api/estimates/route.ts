@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const inputs = result.data.inputs;
   const estimate = calculateEstimate(inputs);
   const supabase = await createClient();
-  if (!supabase) return NextResponse.json({ estimate: { id: `demo-estimate-${crypto.randomUUID()}`, inputs, ...estimate }, demo: true }, { status: 201 });
+  if (!supabase) return NextResponse.json({ error: "Estimator persistence is unavailable because Supabase is not configured." }, { status: 503 });
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) return NextResponse.json({ error: "Sign in to save an estimate to your workspace." }, { status: 401 });
   const { data, error } = await supabase.from("project_estimates").insert({ customer_id: authData.user.id, inputs, minimum_estimate: estimate.minimum, maximum_estimate: estimate.maximum, confidence: estimate.confidence, budget_status: estimate.budgetStatus, breakdown: estimate.breakdown, rate_version: estimate.rateVersion }).select("id, minimum_estimate, maximum_estimate, confidence, budget_status, rate_version, created_at").single();

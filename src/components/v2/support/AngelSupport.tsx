@@ -13,10 +13,10 @@ type Citation = { slug: string; title: string; category: string };
 type Message = { id: string; sender: "user" | "assistant" | "admin" | "system"; content: string; citations?: Citation[]; model?: string | null; safety_flags?: string[]; created_at: string };
 
 const quickPrompts = [
-  "Where can I find my project milestones?",
-  "Explain my credits and renewal date",
-  "Help me locate an invoice or receipt",
-  "I need a Sajivo support specialist",
+  "What is Sajivo and how does the complete workflow work?",
+  "How are requirements matched with professionals?",
+  "Explain projects, milestones, invoices and payments",
+  "How do Sajivo plans, credits and business accounts work?",
 ];
 
 function statusLabel(status: string) {
@@ -104,7 +104,7 @@ export function AngelSupport() {
     <div className="min-h-[calc(100vh-70px)] bg-[#f3f5f3]">
       <header className="border-b border-[#dfe4e0] bg-white px-5 py-6 sm:px-8">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-end justify-between gap-4">
-          <div><p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-[#d65f45]">SAIOS customer support</p><h1 className="mt-2 text-2xl font-extrabold text-[#1c2723] sm:text-3xl">Angel AI</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#68716d]">Account-aware support with approved knowledge, human handoff, tickets, and scheduled callbacks.</p></div>
+          <div><p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-[#d65f45]">SAIOS business and customer support</p><h1 className="mt-2 text-2xl font-extrabold text-[#1c2723] sm:text-3xl">Angel AI</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#68716d]">Sajivo-focused guidance grounded in the approved business, platform, workflow, and authenticated account knowledge base.</p></div>
           <div className="inline-flex rounded-md border border-[#d8ded9] bg-[#f7f8f7] p-1"><button onClick={() => setLocale("en")} className={`h-8 px-3 text-xs font-bold ${locale === "en" ? "rounded bg-[#1d2a27] text-white" : "text-[#64706a]"}`}>English</button><button onClick={() => setLocale("hi")} className={`h-8 px-3 text-xs font-bold ${locale === "hi" ? "rounded bg-[#1d2a27] text-white" : "text-[#64706a]"}`}>हिन्दी</button></div>
         </div>
       </header>
@@ -132,7 +132,7 @@ export function AngelSupport() {
           <button onClick={() => setCallbackOpen((value) => !value)} className="mt-3 flex w-full items-center gap-3 rounded-md border border-[#dce1dd] bg-white p-4 text-left shadow-[0_3px_0_#dce1dd] active:translate-y-[2px] active:shadow-none"><span className="grid h-9 w-9 place-items-center rounded bg-[#fff0eb] text-[#c8543d]"><CalendarClock size={18} /></span><span className="min-w-0 flex-1"><b className="block text-xs">Schedule a callback</b><span className="mt-1 block text-[10px] leading-4 text-[#717b76]">Choose date, window, and channel</span></span><ChevronRight size={15} /></button>
           {callbackOpen ? <CallbackForm conversationId={active?.id ?? null} onDone={() => setCallbackOpen(false)} /> : null}
           <div className="mt-6 border-t border-[#e4e7e5] pt-5"><div className="flex items-center gap-2"><ShieldCheck size={17} className="text-emerald-600" /><h3 className="text-xs font-extrabold">Your security</h3></div><p className="mt-2 text-[11px] leading-5 text-[#707975]">Angel and Sajivo support will never ask for your password, OTP, recovery code, or full payment credentials.</p></div>
-          <div className="mt-5 border-t border-[#e4e7e5] pt-5"><div className="flex items-center gap-2"><LifeBuoy size={17} className="text-[#d65f45]" /><h3 className="text-xs font-extrabold">What Angel knows</h3></div><p className="mt-2 text-[11px] leading-5 text-[#707975]">Approved Sajivo account, project, subscription, credit, payment, communication, and support guidance.</p></div>
+          <div className="mt-5 border-t border-[#e4e7e5] pt-5"><div className="flex items-center gap-2"><LifeBuoy size={17} className="text-[#d65f45]" /><h3 className="text-xs font-extrabold">What Angel knows</h3></div><p className="mt-2 text-[11px] leading-5 text-[#707975]">The Sajivo business model, user roles, complete nine-stage lifecycle, matching, projects, catalog, estimation, finance, plans, credits, SAIOS, trust, integrations, analytics, and support workflows.</p></div>
         </aside>
       </div>
     </div>
@@ -140,7 +140,7 @@ export function AngelSupport() {
 }
 
 function Welcome({ onPrompt }: { onPrompt: (prompt: string) => void }) {
-  return <div className="mx-auto max-w-2xl py-10 text-center"><span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#1d2a27] text-white shadow-[0_5px_0_#0d1512]"><Sparkles size={27} /></span><h2 className="mt-6 text-xl font-extrabold">Hi, I’m Angel.</h2><p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#69736e]">I can help with common Sajivo questions, explain your authorized account and project status, create a support ticket, or arrange a real support call.</p><div className="mt-7 grid gap-2 sm:grid-cols-2">{quickPrompts.map((prompt) => <button key={prompt} onClick={() => onPrompt(prompt)} className="rounded-md border border-[#dce2dd] bg-white px-4 py-3 text-left text-xs font-semibold leading-5 text-[#46514c] shadow-[0_2px_0_#dce2dd] hover:border-[#b9c4bd]">{prompt}</button>)}</div></div>;
+  return <div className="mx-auto max-w-2xl py-10 text-center"><span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#1d2a27] text-white shadow-[0_5px_0_#0d1512]"><Sparkles size={27} /></span><h2 className="mt-6 text-xl font-extrabold">Hi, I’m Angel.</h2><p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#69736e]">Ask me about Sajivo, its complete business and project workflow, or your authorized account context. I can also create a support ticket or arrange a real support call.</p><div className="mt-7 grid gap-2 sm:grid-cols-2">{quickPrompts.map((prompt) => <button key={prompt} onClick={() => onPrompt(prompt)} className="rounded-md border border-[#dce2dd] bg-white px-4 py-3 text-left text-xs font-semibold leading-5 text-[#46514c] shadow-[0_2px_0_#dce2dd] hover:border-[#b9c4bd]">{prompt}</button>)}</div></div>;
 }
 
 function MessageBubble({ message }: { message: Message }) {

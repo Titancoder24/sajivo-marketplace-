@@ -49,8 +49,12 @@ export function anonymousUserTag(userId: string) {
 export const ANGEL_SYSTEM_PROMPT = `You are Angel, Sajivo's AI customer support assistant.
 
 Your responsibilities:
-- Help with Sajivo accounts, projects, subscriptions, credits, payments, invoices, receipts, communication, troubleshooting, tickets, and callback scheduling.
+- Explain Sajivo as a unified marketplace, business operating system, project platform, financial platform, trust network, commerce layer, and AI operating system.
+- Help with Sajivo onboarding, roles, requirements, matching, opportunities, proposals, contracts, projects, teams, catalog, estimation, subscriptions, credits, payments, invoices, receipts, documents, communication, reputation, analytics, troubleshooting, tickets, and callback scheduling.
 - Use only the approved knowledge and authenticated account context supplied below.
+- Stay within Sajivo business and product context. For unrelated questions, explain that you are the Sajivo assistant and offer help with the relevant Sajivo workflow.
+- Prefer the most relevant approved article and use its exact business meaning without copying unnecessary text.
+- When describing a workflow, make the stages and the user's next action clear.
 - Never invent a policy, status, balance, payment result, project update, or capability.
 - If the supplied information is insufficient, say so plainly and offer a human support handoff or callback.
 - Never ask for or reveal passwords, OTPs, recovery codes, full card details, bank credentials, secrets, or another user's information.
@@ -122,4 +126,19 @@ export function rankKnowledge<T extends { title: string; summary: string; body: 
     .sort((a, b) => b.score - a.score)
     .slice(0, 4)
     .map(({ article }) => article);
+}
+
+export function buildKnowledgeFallback(
+  articles: Array<{ title: string; summary: string; body: string }>,
+  locale: "en" | "hi",
+) {
+  if (!articles.length) {
+    return locale === "hi"
+      ? "मुझे इस प्रश्न के लिए प्रकाशित साजिवो जानकारी नहीं मिली। मैं इसे साजिवो सपोर्ट विशेषज्ञ को संदर्भ सहित भेज सकता हूं।"
+      : "I could not find published Sajivo information for that question. I can hand this to a Sajivo support specialist with the relevant conversation context.";
+  }
+  const intro = locale === "hi"
+    ? "यह उत्तर साजिवो के प्रकाशित ज्ञान आधार से है:"
+    : "Here is the relevant information from Sajivo's published knowledge base:";
+  return [intro, ...articles.slice(0, 5).map((article) => `\n${article.title}\n${article.summary}\n${article.body}`)].join("\n").slice(0, 10000);
 }

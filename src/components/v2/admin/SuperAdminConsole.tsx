@@ -32,6 +32,8 @@ const sectionNav = [
   { key: "integrations", label: "Integrations", Icon: KeyRound },
 ] as const;
 
+const adminChromeStyle = `body:has([data-super-admin-console]) > div > header.sticky, body:has([data-super-admin-console]) nav[aria-label="V2 mobile navigation"], body:has([data-super-admin-console]) > aside[aria-label="Appearance and language preferences"], body:has([data-super-admin-console]) > button[aria-label="Mute interface sounds"], body:has([data-super-admin-console]) > button[aria-label="Enable interface sounds"] { display: none; } body:has([data-super-admin-console]) > div > main { min-height: 100vh; padding-bottom: 0; }`;
+
 export function SuperAdminConsole() {
   const [data, setData] = useState<Overview | null>(null);
   const [section, setSection] = useState<Section>("overview");
@@ -59,13 +61,14 @@ export function SuperAdminConsole() {
     setSection("conversations");
   }
 
-  if (loading) return <div className="grid min-h-[calc(100vh-70px)] place-items-center bg-[#f2f4f2]"><Loader2 className="animate-spin text-[#3f5149]" size={28} /></div>;
-  if (forbidden) return <Forbidden />;
-  if (!data) return <div className="grid min-h-[calc(100vh-70px)] place-items-center">Administration data is unavailable.</div>;
+  if (loading) return <div data-super-admin-console className="grid min-h-screen place-items-center bg-[#f2f4f2]"><style>{adminChromeStyle}</style><Loader2 className="animate-spin text-[#3f5149]" size={28} /></div>;
+  if (forbidden) return <div data-super-admin-console><style>{adminChromeStyle}</style><Forbidden /></div>;
+  if (!data) return <div data-super-admin-console className="grid min-h-screen place-items-center"><style>{adminChromeStyle}</style>Administration data is unavailable.</div>;
 
   return (
-    <div className="min-h-[calc(100vh-70px)] bg-[#eef1ef] text-[#19221e]">
-      <div className="grid min-h-[calc(100vh-70px)] lg:grid-cols-[224px_minmax(0,1fr)]">
+    <div data-super-admin-console className="min-h-screen bg-[#eef1ef] text-[#19221e]">
+      <style>{adminChromeStyle}</style>
+      <div className="grid min-h-screen lg:grid-cols-[224px_minmax(0,1fr)]">
         <aside className="border-r border-[#dbe0dc] bg-[#17211d] p-4 text-white">
           <div className="flex items-center gap-3 border-b border-white/10 px-2 pb-5"><span className="grid h-10 w-10 place-items-center rounded-md bg-[#d65f45] shadow-[0_3px_0_#8d3928]"><ShieldCheck size={20} /></span><div><p className="text-sm font-extrabold">Control room</p><p className="mt-0.5 text-[10px] text-white/55">{data.admin.role.replaceAll("_", " ")}</p></div></div>
           <nav className="mt-5 space-y-1">{sectionNav.map(({ key, label, Icon }) => <button key={key} onClick={() => setSection(key)} className={`flex h-11 w-full items-center gap-3 rounded-md px-3 text-left text-xs font-bold ${section === key ? "bg-white text-[#17211d]" : "text-white/68 hover:bg-white/8 hover:text-white"}`}><Icon size={17} />{label}</button>)}</nav>

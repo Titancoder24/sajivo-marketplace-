@@ -7,6 +7,6 @@ export const metadata: Metadata = { title: "Sajivo Super Admin", robots: { index
 
 export default async function SuperAdminPage() {
   const admin = await getPlatformAdmin();
-  if (!admin) redirect("/v2");
+  if (!admin) redirect("/super-admin/login");
   return <SuperAdminConsole />;
 }

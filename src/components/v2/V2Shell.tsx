@@ -47,6 +47,10 @@ export function V2Shell({ children, initialProfile, isPlatformAdmin = false }: {
     router.refresh();
   }
 
+  if (pathname.startsWith("/v2/admin")) {
+    return <div className="min-h-screen bg-[#f6f7f5] text-[#1c2421]">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f7f5] text-[#1c2421]">
       <header className="sticky top-0 z-50 border-b border-[#dfe3df] bg-white/95 backdrop-blur-xl">

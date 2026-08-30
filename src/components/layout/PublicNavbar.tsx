@@ -41,7 +41,7 @@ export function PublicNavbar() {
               <Search size={16} /> Search
             </Link>
             <Link href="/login" className="rv-focus hidden rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-[var(--rv-bg)] md:block">Log in</Link>
-            <Link href="/register" className="button-3d button-depth-secondary rv-focus hidden rounded-full bg-[var(--rv-slate)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--rv-slate-2)] md:block">Sign up</Link>
+            <Link href="/v2/register" className="button-3d button-depth-secondary rv-focus hidden rounded-full bg-[var(--rv-slate)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--rv-slate-2)] md:block">Sign up</Link>
             <button className="rv-focus grid h-10 w-10 place-items-center rounded-full border border-[var(--rv-border)] md:hidden" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu" aria-expanded={open}>
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -55,7 +55,7 @@ export function PublicNavbar() {
               ))}
               <div className="mt-2 grid grid-cols-2 gap-2 border-t border-[var(--rv-border)] pt-3">
                 <Link href="/login" className="rounded-lg border border-[var(--rv-border)] px-4 py-3 text-center text-sm font-semibold" onClick={() => setOpen(false)}>Log in</Link>
-                <Link href="/register" className="rounded-lg bg-[var(--rv-slate)] px-4 py-3 text-center text-sm font-semibold text-white" onClick={() => setOpen(false)}>Sign up</Link>
+                <Link href="/v2/register" className="rounded-lg bg-[var(--rv-slate)] px-4 py-3 text-center text-sm font-semibold text-white" onClick={() => setOpen(false)}>Sign up</Link>
               </div>
             </div>
           </div>

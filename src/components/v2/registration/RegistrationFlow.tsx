@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, Check, LockKeyhole } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AccountStep } from "./AccountStep";
 import { BusinessDetailsStep } from "./BusinessDetailsStep";
@@ -50,7 +51,15 @@ function validate(step: number, data: RegistrationData): RegistrationErrors {
 }
 
 export function RegistrationFlow() {
-  const [data, setData] = useState(initialData);
+  const params = useSearchParams();
+  const [data, setData] = useState<RegistrationData>(() => {
+    const requestedRole = params.get("role");
+    if (requestedRole === "customer") return { ...initialData, accountType: "client" };
+    if (requestedRole === "vendor") return { ...initialData, accountType: "business", businessUse: "vendor", vendorRole: "retailer" };
+    if (requestedRole === "contractor") return { ...initialData, accountType: "business", businessUse: "professional", professionalRole: "contractor" };
+    if (requestedRole === "designer") return { ...initialData, accountType: "business", businessUse: "professional", professionalRole: "interior_designer" };
+    return initialData;
+  });
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<RegistrationErrors>({});
   const [submitted, setSubmitted] = useState(false);

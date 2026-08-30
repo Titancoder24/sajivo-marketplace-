@@ -4,8 +4,8 @@ import { BrandMark } from "@/components/sajivo/BrandMark";
 
 const groups = [
   ["Explore", [["Services", "/services"], ["Find professionals", "/professionals"], ["Vendors / Businesses", "/for-professionals"], ["How Sajivo Works", "/how-it-works"]]],
-  ["Professionals", [["Join Sajivo", "/for-professionals"], ["Designer account", "/register?role=designer"], ["Contractor account", "/register?role=contractor"]]],
-  ["Account", [["Log in", "/login"], ["Create account", "/register"], ["Start a project", "/register?role=customer"]]],
+  ["Professionals", [["Join Sajivo", "/for-professionals"], ["Designer account", "/v2/register?role=designer"], ["Contractor account", "/v2/register?role=contractor"]]],
+  ["Account", [["Log in", "/login"], ["Create account", "/v2/register"], ["Start a project", "/v2/register?role=customer"]]],
 ] as const;
 
 export function PublicFooter() {

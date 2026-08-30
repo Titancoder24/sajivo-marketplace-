@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getRuntimeIntegration } from "@/lib/server/integrations";
 
-export const ANGEL_MODEL = process.env.OPENROUTER_MODEL ?? "google/gemini-2.5-flash-lite";
+export const ANGEL_MODEL = process.env.OPENROUTER_MODEL ?? "google/gemini-3.5-flash";
 
 export type AngelAuth = {
   supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>;

@@ -31,15 +31,15 @@ const navigation = [
   { href: "/v2/support", label: "Angel", icon: Bot },
 ] as const;
 
-export function V2Shell({ children, initialProfile }: { children: React.ReactNode; initialProfile: { full_name?: string; primary_role?: string } | null }) {
+export function V2Shell({ children, initialProfile, isPlatformAdmin = false }: { children: React.ReactNode; initialProfile: { full_name?: string; primary_role?: string } | null; isPlatformAdmin?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const profile = initialProfile;
-  const visibleNavigation = profile ? navigation : navigation.slice(0, 1);
-  const workspaceHref = profile?.primary_role === "customer" ? "/v2/client" : profile?.primary_role === "vendor" ? "/vendor/dashboard" : profile?.primary_role === "admin" ? "/v2/admin" : "/v2/professional";
-  const roleLabel = profile?.primary_role === "customer" ? "Client account" : profile?.primary_role === "vendor" ? "Vendor account" : profile?.primary_role === "admin" ? "Super admin" : "Professional account";
+  const visibleNavigation = profile ? navigation : navigation.filter(({ href }) => href === "/v2" || href === "/v2/support");
+  const workspaceHref = isPlatformAdmin ? "/v2/admin" : profile?.primary_role === "customer" ? "/v2/client" : profile?.primary_role === "vendor" ? "/vendor/dashboard" : profile?.primary_role === "admin" ? "/v2/admin" : "/v2/professional";
+  const roleLabel = isPlatformAdmin ? "Super admin" : profile?.primary_role === "customer" ? "Client account" : profile?.primary_role === "vendor" ? "Vendor account" : profile?.primary_role === "admin" ? "Super admin" : "Professional account";
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     setAccountOpen(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Contrast, Languages, Moon, Sun } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Contrast, Languages, Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { translatePage } from "@/lib/i18n";
@@ -19,6 +19,7 @@ export function AppPreferences() {
   const [theme, setTheme] = useState<Theme>("light");
   const [language, setLanguage] = useState<Language>("en");
   const [ready, setReady] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("sajivo-theme") as Theme | null;
@@ -53,7 +54,11 @@ export function AppPreferences() {
   }
 
   return (
-    <aside className="fixed bottom-[78px] right-[68px] z-[70] flex items-center gap-1 rounded-lg border border-[var(--rv-border)] bg-[var(--rv-surface)]/95 p-1 shadow-lg backdrop-blur sm:bottom-5 sm:right-[72px] sm:top-auto" aria-label="Appearance and language preferences">
+    <aside className="fixed bottom-[78px] right-3 z-[70] flex items-center gap-1 rounded-lg border border-[var(--rv-border)] bg-[var(--rv-surface)]/95 p-1 shadow-lg backdrop-blur sm:bottom-5" aria-label="Appearance and language preferences">
+      <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} aria-label={expanded ? "Collapse preferences" : "Expand preferences"} className="grid h-8 w-8 place-items-center rounded-full text-[var(--rv-ink-2)] hover:bg-[var(--rv-bg)]">
+        {expanded ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+      {expanded ? <>
       <div className="flex items-center gap-0.5" role="group" aria-label="Choose theme">
         {themes.map(({ id, label, icon: Icon }) => (
           <button key={id} type="button" onClick={() => selectTheme(id)} aria-label={`${label} theme`} aria-pressed={theme === id} title={`${label} theme`} className={`grid h-8 w-8 place-items-center rounded-full transition ${theme === id ? "bg-[var(--rv-terracotta)] text-white" : "text-[var(--rv-ink-2)] hover:bg-[var(--rv-bg)]"}`}>
@@ -66,6 +71,7 @@ export function AppPreferences() {
         <Languages size={14} /> {language === "en" ? "EN" : "हिन्दी"}
         {language === "hi" ? <Check size={12} /> : null}
       </button>
+      </> : null}
     </aside>
   );
 }

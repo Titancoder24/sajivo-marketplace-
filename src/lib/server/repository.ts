@@ -184,6 +184,30 @@ export async function getPortfolioForProfessional(id: string) {
   return data.map((row) => ({ id: row.id, professionalId: row.professional_id, title: row.title, category: row.category ?? "Interior project", description: row.description ?? "", location: row.location ?? "", completionYear: row.completion_year ?? new Date(row.created_at).getFullYear(), servicesProvided: row.services_provided ?? [], isFeatured: row.is_featured ?? false }));
 }
 
+export async function getPublicWorkPhotos() {
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("portfolio_media")
+    .select("id, storage_bucket, storage_path, professional_id, project:portfolio_projects(title, category, location, is_platform_verified)")
+    .order("created_at", { ascending: false })
+    .limit(12);
+  if (error || !data) return [];
+  return data.flatMap((row) => {
+    const project = Array.isArray(row.project) ? row.project[0] : row.project;
+    if (!project?.is_platform_verified) return [];
+    const { data: publicFile } = supabase.storage.from(row.storage_bucket).getPublicUrl(row.storage_path);
+    return [{
+      id: row.id,
+      title: project.title,
+      type: project.category || "Completed project",
+      city: project.location || "India",
+      image: publicFile.publicUrl,
+      professionalId: row.professional_id,
+    }];
+  });
+}
+
 export async function getReviewsForProfessional(id: string) {
   const supabase = await createClient();
   if (!supabase) return [];

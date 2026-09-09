@@ -1,2 +1,6 @@
-import { WorkspaceScreen } from "@/components/v2/client/ClientScreens";
-export default function Page(){return <WorkspaceScreen/>}
+import { redirect } from "next/navigation";
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  redirect(`/v2/projects/${id}`);
+}

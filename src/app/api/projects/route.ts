@@ -15,6 +15,7 @@ const projectSchema = z.object({
   locality: z.string().trim().max(120).optional(),
   budgetRange: z.string().min(2).max(100),
   expectedTimeline: z.string().trim().min(2).max(120),
+  fulfillmentPreference: z.enum(["independent_professional", "managed_execution", "help_me_decide"]).default("help_me_decide"),
   fileNames: z.array(z.string().max(255)).max(20).default([]),
   publish: z.boolean().default(false),
 });
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) return NextResponse.json({ error: "Sign in with a client account to publish a project." }, { status: 401 });
 
-  const { data: project, error } = await supabase.from("projects").insert({
+  const projectInsert = {
     customer_id: authData.user.id,
     title: body.title,
     description: body.description,
@@ -45,9 +46,33 @@ export async function POST(request: NextRequest) {
     locality: body.locality,
     budget_range: body.budgetRange,
     expected_timeline: body.expectedTimeline,
+    fulfillment_preference: body.fulfillmentPreference,
     preferences: { uploaded_file_names: body.fileNames },
     published_at: body.publish ? new Date().toISOString() : null,
-  }).select("*").single();
+  };
+  let { data: project, error } = await supabase.from("projects").insert(projectInsert).select("*").single();
+  if (error && /fulfillment_preference/i.test(error.message)) {
+    if (body.fulfillmentPreference === "managed_execution") {
+      return NextResponse.json({ error: "Sajivo Managed Execution is temporarily unavailable while its database migration is activated." }, { status: 503 });
+    }
+    const { fulfillment_preference: _pendingMigration, ...legacyInsert } = projectInsert;
+    void _pendingMigration;
+    ({ data: project, error } = await supabase.from("projects").insert(legacyInsert).select("*").single());
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!project) return NextResponse.json({ error: "Project could not be created." }, { status: 500 });
+
+  if (body.fulfillmentPreference === "managed_execution") {
+    const { error: managedError } = await supabase.from("managed_execution_cases").insert({
+      project_id: project.id,
+      customer_id: authData.user.id,
+      acquisition_path: "customer_opt_in",
+      eligibility_reason: "Customer requested Sajivo Managed Execution during project creation.",
+    });
+    if (managedError) {
+      await supabase.from("projects").delete().eq("id", project.id).eq("customer_id", authData.user.id);
+      return NextResponse.json({ error: managedError.message }, { status: 400 });
+    }
+  }
   return NextResponse.json({ project }, { status: 201 });
 }

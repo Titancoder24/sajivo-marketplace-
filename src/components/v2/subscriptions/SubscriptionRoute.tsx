@@ -1,11 +1,14 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { SubscriptionScreen } from "./SubscriptionScreen";
 import type { SubscriptionRole, SubscriptionSection } from "./subscription-data";
 
-function parseRole(value?: string): SubscriptionRole {
-  return value === "customer" || value === "vendor" || value === "professional" ? value : "professional";
-}
-
-export async function SubscriptionRoute({ section, searchParams }: { section: SubscriptionSection; searchParams: Promise<{ role?: string }> }) {
-  const params = await searchParams;
-  return <SubscriptionScreen initialRole={parseRole(params.role)} section={section} />;
+export async function SubscriptionRoute({ section }: { section: SubscriptionSection; searchParams: Promise<{ role?: string }> }) {
+  const supabase = await createClient();
+  if (!supabase) redirect("/login?next=/v2/subscriptions");
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) redirect("/login?next=/v2/subscriptions");
+  const { data: profile } = await supabase.from("profiles").select("primary_role").eq("id", auth.user.id).single();
+  const role: SubscriptionRole = profile?.primary_role === "customer" ? "customer" : profile?.primary_role === "vendor" ? "vendor" : "professional";
+  return <SubscriptionScreen initialRole={role} section={section} />;
 }

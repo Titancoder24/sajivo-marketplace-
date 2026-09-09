@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -22,36 +21,39 @@ const sections: { key: SubscriptionSection; label: string; Icon: typeof Gauge }[
 ];
 
 function routeFor(section: SubscriptionSection, role: SubscriptionRole) {
-  return `/v2/subscriptions${section === "plans" ? "" : `/${section}`}?role=${role}`;
+  void role;
+  return `/v2/subscriptions${section === "plans" ? "" : `/${section}`}`;
+}
+
+function dashboardRoute(role: SubscriptionRole) {
+  return role === "customer" ? "/v2/client" : role === "vendor" ? "/vendor/dashboard" : "/v2/professional";
 }
 
 export function SubscriptionScreen({ initialRole, section }: { initialRole: SubscriptionRole; section: SubscriptionSection }) {
-  const router = useRouter();
-  const [role, setRole] = useState(initialRole);
+  const role = initialRole;
   const [mobileNav, setMobileNav] = useState(false);
   const meta = roleMeta[role];
-  const changeRole = (next: SubscriptionRole) => { setRole(next); router.replace(routeFor(section, next)); };
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] text-[#111827]">
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-[#e8e8e5] bg-white transition-transform lg:translate-x-0 ${mobileNav ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-[76px] items-center justify-between border-b border-[#efefec] px-6"><BrandMark /><button onClick={() => setMobileNav(false)} aria-label="Close navigation" className="grid h-9 w-9 place-items-center lg:hidden"><X size={20} /></button></div>
         <nav className="flex-1 overflow-y-auto px-4 py-5">
-          <NavItem Icon={LayoutDashboard} label="Dashboard" />
-          <NavItem Icon={Package} label={role === "customer" ? "Projects" : role === "vendor" ? "Catalogue" : "Opportunities"} badge={role === "customer" ? undefined : "12"} />
-          <NavItem Icon={FileText} label={role === "vendor" ? "Enquiries" : "Proposals"} />
-          <NavItem Icon={Users} label={role === "customer" ? "Professionals" : "Clients"} />
-          <NavItem Icon={Bot} label="Messages" badge="5" />
+          <NavItem href={dashboardRoute(role)} Icon={LayoutDashboard} label="Dashboard" />
+          <NavItem href={role === "customer" ? "/v2/client/projects" : role === "vendor" ? "/vendor/dashboard/catalogue" : "/v2/professional/opportunities"} Icon={Package} label={role === "customer" ? "Projects" : role === "vendor" ? "Catalogue" : "Opportunities"} />
+          <NavItem href={role === "vendor" ? "/vendor/dashboard/enquiries" : `${dashboardRoute(role)}/proposals`} Icon={FileText} label={role === "vendor" ? "Enquiries" : "Proposals"} />
+          <NavItem href={role === "customer" ? "/professionals" : `${dashboardRoute(role)}/clients`} Icon={Users} label={role === "customer" ? "Professionals" : "Clients"} />
+          <NavItem href={`${dashboardRoute(role)}/messages`} Icon={Bot} label="Messages" />
           <div className="my-4 border-t border-[#efefec]" />
           <p className="px-3 pb-2 text-[10px] font-bold uppercase text-[#94979d]">Manage business</p>
-          <NavItem Icon={Building2} label="Business profile" />
-          <NavItem Icon={Sparkles} label={role === "vendor" ? "Promotions" : "Portfolio"} />
-          <NavItem Icon={Gauge} label="Analytics" />
-          <NavItem Icon={BadgeCheck} label="Trust & verification" />
+          <NavItem href={`${dashboardRoute(role)}/profile`} Icon={Building2} label={role === "customer" ? "Profile" : "Business profile"} />
+          <NavItem href={`${dashboardRoute(role)}/${role === "vendor" ? "promotions" : "portfolio"}`} Icon={Sparkles} label={role === "vendor" ? "Promotions" : "Portfolio"} />
+          <NavItem href={`${dashboardRoute(role)}/analytics`} Icon={Gauge} label="Analytics" />
+          <NavItem href={`${dashboardRoute(role)}/verification`} Icon={BadgeCheck} label="Trust & verification" />
           <div className="my-4 border-t border-[#efefec]" />
-          <NavItem Icon={Settings} label="Settings" />
+          <NavItem href={`${dashboardRoute(role)}/settings`} Icon={Settings} label="Settings" />
           <Link href={routeFor("plans", role)} className="flex h-11 items-center gap-3 rounded-md bg-[#fff0eb] px-3 text-sm font-bold text-[#e74e1b]"><WalletCards size={18} />Subscription</Link>
-          <NavItem Icon={CircleHelp} label="Help & support" />
+          <NavItem href="/v2/support" Icon={CircleHelp} label="Help & support" />
         </nav>
         <div className="m-4 border border-[#eadff7] bg-[#fbf8ff] p-4">
           <p className="font-bold text-[#3e286d]">Upgrade & grow faster</p><p className="mt-2 text-xs leading-5 text-[#6b6574]">Unlock more opportunities and build your business with stronger limits.</p>
@@ -73,12 +75,7 @@ export function SubscriptionScreen({ initialRole, section }: { initialRole: Subs
         </header>
 
         <main className="mx-auto max-w-[1510px] px-4 py-5 md:px-7 lg:px-8">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex max-w-full overflow-x-auto border border-[#dededb] bg-white p-1" aria-label="Preview role">
-              {(Object.keys(roleMeta) as SubscriptionRole[]).map((item) => <button key={item} onClick={() => changeRole(item)} className={`h-8 whitespace-nowrap px-3 text-xs font-bold ${role === item ? "bg-[#111827] text-white" : "text-[#666b73] hover:bg-[#f5f5f3]"}`}>{roleMeta[item].label}</button>)}
-            </div>
-            <p className="text-xs text-[#747880]">Viewing entitlements for <b className="text-[#252a31]">{meta.label}</b></p>
-          </div>
+          <div className="mb-5 flex items-center justify-between gap-3"><p className="text-xs text-[#747880]">Your account-specific subscription</p><p className="text-xs text-[#747880]">Plan type: <b className="text-[#252a31]">{meta.label}</b></p></div>
 
           <PlanSummary role={role} />
 
@@ -98,7 +95,7 @@ export function SubscriptionScreen({ initialRole, section }: { initialRole: Subs
   );
 }
 
-function NavItem({ Icon, label, badge }: { Icon: typeof Gauge; label: string; badge?: string }) { return <button className="flex h-11 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-semibold text-[#343840] hover:bg-[#f6f6f4]"><Icon size={18} /><span className="min-w-0 flex-1 truncate">{label}</span>{badge && <span className="grid h-5 min-w-5 place-items-center rounded bg-red-500 px-1 text-[10px] font-bold text-white">{badge}</span>}</button>; }
+function NavItem({ href, Icon, label }: { href: string; Icon: typeof Gauge; label: string }) { return <Link href={href} className="flex h-11 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-semibold text-[#343840] hover:bg-[#f6f6f4]"><Icon size={18} /><span className="min-w-0 flex-1 truncate">{label}</span></Link>; }
 
 function PlanSummary({ role }: { role: SubscriptionRole }) {
   return <section className="grid overflow-hidden border border-[#bed9cf] bg-[#f4fbf8] lg:grid-cols-[minmax(0,1fr)_410px]">

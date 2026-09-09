@@ -28,6 +28,21 @@ type SeoTemplate = {
 
 export type ProgrammaticSeoContent = Omit<SeoTemplate, "aliases">;
 
+export type HighIntentSeoRoute = {
+  phrase: string;
+  label: string;
+  routeSlug: string;
+  canonicalSlug: string;
+  intent: SeoIntent;
+};
+
+export type ApprovedSeoCity = {
+  state: string;
+  stateSlug: string;
+  city: string;
+  citySlug: string;
+};
+
 const templates: SeoTemplate[] = [
   {
     slug: "interior-designers",
@@ -229,7 +244,7 @@ const templates: SeoTemplate[] = [
   },
   {
     slug: "contractor-credibility",
-    aliases: ["how-to-choose-a-contractor", "check-contractor-credibility", "renovation-fraud"],
+    aliases: ["how-to-choose-a-contractor", "check-contractor-credibility", "how-to-check-contractor-credibility", "renovation-fraud", "how-to-avoid-contractor-fraud"],
     serviceName: "Contractor Credibility Guide",
     intent: "informational",
     title: "How to Check Contractor Credibility in {city} | Sajivo",
@@ -295,7 +310,7 @@ const templates: SeoTemplate[] = [
   },
   {
     slug: "renovation-project-management",
-    aliases: ["renovation-management", "renovation-budget-tracking", "construction-project-management-software", "interior-project-management-software"],
+    aliases: ["renovation-management", "renovation-budget-tracking", "how-to-manage-home-renovation", "how-to-control-renovation-budget", "how-to-track-construction-project", "construction-project-management-software", "interior-project-management-software"],
     serviceName: "Renovation Project Management",
     intent: "commercial",
     title: "Renovation & Interior Project Management in {city} | Sajivo",
@@ -357,6 +372,59 @@ for (const template of templates) {
 }
 
 export const PROGRAMMATIC_SEO_SLUGS = templates.map((template) => template.slug);
+
+/**
+ * Search-language routes mapped to substantive intent-cluster pages. Multiple
+ * phrases deliberately share a canonical route to avoid thin doorway pages.
+ */
+export const HIGH_INTENT_SEO_ROUTES: HighIntentSeoRoute[] = [
+  { phrase: "Best interior designer near me", label: "Best interior designer near me", routeSlug: "interior-designers", canonicalSlug: "interior-designers", intent: "local" },
+  { phrase: "Best contractor near me", label: "Best contractor near me", routeSlug: "home-renovation", canonicalSlug: "home-renovation", intent: "local" },
+  { phrase: "Reliable contractor for home renovation", label: "Reliable contractor for home renovation", routeSlug: "home-renovation", canonicalSlug: "home-renovation", intent: "local" },
+  { phrase: "Home renovation contractor", label: "Home renovation contractor", routeSlug: "home-renovation", canonicalSlug: "home-renovation", intent: "local" },
+  { phrase: "Interior designer for 3BHK", label: "Interior designer for 3BHK", routeSlug: "interior-designers", canonicalSlug: "interior-designers", intent: "local" },
+  { phrase: "Office interior contractor", label: "Office interior contractor", routeSlug: "office-interior-contractors", canonicalSlug: "office-interior-contractors", intent: "commercial" },
+  { phrase: "Commercial interior contractor", label: "Commercial interior contractor", routeSlug: "office-interior-contractors", canonicalSlug: "office-interior-contractors", intent: "commercial" },
+  { phrase: "Home renovation cost", label: "Home renovation cost", routeSlug: "renovation-cost", canonicalSlug: "renovation-cost", intent: "informational" },
+  { phrase: "Interior design cost per sq ft", label: "Interior design cost per sq ft", routeSlug: "interior-design-cost", canonicalSlug: "interior-design-cost", intent: "informational" },
+  { phrase: "House renovation cost", label: "House renovation cost", routeSlug: "renovation-cost", canonicalSlug: "renovation-cost", intent: "informational" },
+  { phrase: "Construction cost estimate", label: "Construction cost estimate", routeSlug: "civil-contractors", canonicalSlug: "civil-contractors", intent: "commercial" },
+  { phrase: "Modular kitchen cost", label: "Modular kitchen cost", routeSlug: "modular-kitchen", canonicalSlug: "modular-kitchen", intent: "commercial" },
+  { phrase: "Bathroom renovation cost", label: "Bathroom renovation cost", routeSlug: "bathroom-renovation-cost", canonicalSlug: "bathroom-renovation-cost", intent: "informational" },
+  { phrase: "False ceiling cost", label: "False ceiling cost", routeSlug: "false-ceiling-cost", canonicalSlug: "false-ceiling-cost", intent: "informational" },
+  { phrase: "How to choose a contractor", label: "How to choose a contractor", routeSlug: "contractor-credibility", canonicalSlug: "contractor-credibility", intent: "informational" },
+  { phrase: "How to check contractor credibility", label: "How to check contractor credibility", routeSlug: "contractor-credibility", canonicalSlug: "contractor-credibility", intent: "informational" },
+  { phrase: "Contractor quotation comparison", label: "Contractor quotation comparison", routeSlug: "quotation-comparison", canonicalSlug: "quotation-comparison", intent: "informational" },
+  { phrase: "Interior designer vs contractor", label: "Interior designer vs contractor", routeSlug: "interior-designer-vs-contractor", canonicalSlug: "interior-designer-vs-contractor", intent: "informational" },
+  { phrase: "Turnkey interior contractor", label: "Turnkey interior contractor", routeSlug: "home-renovation", canonicalSlug: "home-renovation", intent: "local" },
+  { phrase: "How to manage home renovation", label: "How to manage home renovation", routeSlug: "renovation-project-management", canonicalSlug: "renovation-project-management", intent: "commercial" },
+  { phrase: "How to avoid contractor fraud", label: "How to avoid contractor fraud", routeSlug: "contractor-credibility", canonicalSlug: "contractor-credibility", intent: "informational" },
+  { phrase: "How to control renovation budget", label: "How to control renovation budget", routeSlug: "renovation-project-management", canonicalSlug: "renovation-project-management", intent: "commercial" },
+  { phrase: "How to track construction project", label: "How to track construction project", routeSlug: "renovation-project-management", canonicalSlug: "renovation-project-management", intent: "commercial" },
+  { phrase: "Construction project management software", label: "Construction project management software", routeSlug: "renovation-project-management", canonicalSlug: "renovation-project-management", intent: "commercial" },
+  { phrase: "Interior project management software", label: "Interior project management software", routeSlug: "renovation-project-management", canonicalSlug: "renovation-project-management", intent: "commercial" },
+];
+
+export const APPROVED_SEO_CITIES: ApprovedSeoCity[] = [
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Agra", citySlug: "agra" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Aligarh", citySlug: "aligarh" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Ayodhya", citySlug: "ayodhya" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Bareilly", citySlug: "bareilly" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Ghaziabad", citySlug: "ghaziabad" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Gorakhpur", citySlug: "gorakhpur" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Jhansi", citySlug: "jhansi" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Kanpur", citySlug: "kanpur" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Lucknow", citySlug: "lucknow" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Mathura", citySlug: "mathura" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Meerut", citySlug: "meerut" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Moradabad", citySlug: "moradabad" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Noida", citySlug: "noida" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Prayagraj", citySlug: "prayagraj" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Saharanpur", citySlug: "saharanpur" },
+  { state: "Uttar Pradesh", stateSlug: "uttar-pradesh", city: "Varanasi", citySlug: "varanasi" },
+];
+
+export const ALL_PROGRAMMATIC_SEO_SLUGS = [...PROGRAMMATIC_SEO_SLUGS];
 
 export const PROGRAMMATIC_SEO_TEMPLATES = templates.map(({ slug, serviceName, intent, keywords }) => ({
   slug,

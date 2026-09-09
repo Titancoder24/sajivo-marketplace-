@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  APPROVED_SEO_CITIES,
   buildProgrammaticSeoContent,
+  HIGH_INTENT_SEO_ROUTES,
   PROGRAMMATIC_SEO_TEMPLATES,
   toSeoSlug,
 } from "@/lib/seo/programmatic";
@@ -30,6 +32,17 @@ export async function GET() {
     pages: pages ?? [],
     keywordCount: keywordCount ?? 0,
     templates: PROGRAMMATIC_SEO_TEMPLATES,
+    highIntentRoutes: HIGH_INTENT_SEO_ROUTES.map((route) => ({
+      ...route,
+      crawlStatus: "Crawlable",
+      indexable: true,
+    })),
+    approvedCities: APPROVED_SEO_CITIES.map((location) => ({
+      name: location.city,
+      slug: location.citySlug,
+      stateName: location.state,
+      stateSlug: location.stateSlug,
+    })),
   });
 }
 

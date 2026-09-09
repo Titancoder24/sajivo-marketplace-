@@ -134,7 +134,7 @@ export default function SeoDirectoryPage() {
           <section className="border-b border-black/10 py-10 dark:border-white/10" aria-labelledby="keyword-map-heading">
             <h2 id="keyword-map-heading" className="text-2xl font-semibold">High-intent keyword map</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 opacity-65">
-              All 25 supplied searches map to 14 substantial intent guides. Closely related phrases share a canonical page instead of creating thin duplicate content.
+              All 25 supplied searches map to {canonicalRoutes.length} substantial intent guides. Closely related phrases share a canonical page instead of creating thin duplicate content.
             </p>
             <ol className="mt-6 grid gap-x-10 gap-y-3 sm:grid-cols-2">
               {seoRoutes.map((route) => (

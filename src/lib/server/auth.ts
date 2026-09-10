@@ -24,8 +24,9 @@ export async function requireDashboardRoles(expectedRoles: Array<Exclude<UserRol
     redirect(`/login?next=${encodeURIComponent(roleHome[expectedRole])}`);
   }
 
-  const { data: profile } = await supabase.from("profiles").select("primary_role, account_status").eq("id", authData.user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("full_name, email, primary_role, account_status").eq("id", authData.user.id).single();
   if (!profile || (profile.account_status && profile.account_status !== "active")) redirect("/login?status=account_unavailable");
   const role = profile.primary_role as UserRole;
   if (!expectedRoles.includes(role as Exclude<UserRole, "admin">) && role !== "admin") redirect(roleHome[role] ?? "/dashboard");
+  return { userId: authData.user.id, profile };
 }

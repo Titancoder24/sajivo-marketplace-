@@ -3,6 +3,7 @@ import {
   ANGEL_MODEL,
   ANGEL_SYSTEM_PROMPT,
   buildKnowledgeFallback,
+  classifyAngelIntent,
   getAngelAuth,
   normalizeMessage,
   rankKnowledge,
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const message = normalizeMessage(body.message);
   if (!message) return NextResponse.json({ error: "Message is required" }, { status: 400 });
+  const intent = classifyAngelIntent(message);
 
   const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
   const { count } = await auth.supabase
@@ -61,9 +63,10 @@ export async function POST(request: Request) {
     auth.supabase.from("ai_support_messages").select("sender, content").eq("conversation_id", conversationId).order("created_at", { ascending: false }).limit(12),
   ]);
 
-  const localMatches = rankKnowledge((articles ?? []) as KnowledgeArticle[], message);
-  const matched = [...localMatches, ...((ranked ?? []) as KnowledgeArticle[])];
-  const selectedArticles = [...matched, ...(!matched.length ? (anchors ?? []) as KnowledgeArticle[] : [])]
+  const searchesKnowledge = intent === "question" || intent === "platform_overview";
+  const localMatches = searchesKnowledge ? rankKnowledge((articles ?? []) as KnowledgeArticle[], message) : [];
+  const matched = searchesKnowledge ? [...localMatches, ...((ranked ?? []) as KnowledgeArticle[])] : [];
+  const selectedArticles = [...matched, ...(intent === "platform_overview" && !matched.length ? (anchors ?? []) as KnowledgeArticle[] : [])]
     .filter((article, index, all) => all.findIndex((candidate) => candidate.slug === article.slug) === index)
     .slice(0, 3);
   const accountContext = JSON.stringify({ profile, projects: projects ?? [], creditWallets: wallet ?? [], subscription, recentPayments: payments ?? [] });
@@ -84,7 +87,7 @@ export async function POST(request: Request) {
     let completion;
     try {
       completion = await requestAngelCompletion([
-        { role: "system", content: `${ANGEL_SYSTEM_PROMPT}\n\nAPPROVED SAJIVO KNOWLEDGE:\n${knowledgeContext || "No matching approved article was found."}\n\nAUTHENTICATED ACCOUNT CONTEXT:\n${accountContext}` },
+        { role: "system", content: `${ANGEL_SYSTEM_PROMPT}\n\nCONVERSATION INTENT: ${intent}\n\nAPPROVED SAJIVO KNOWLEDGE:\n${knowledgeContext || "No matching approved article was found."}\n\nAUTHENTICATED ACCOUNT CONTEXT:\n${accountContext}` },
         ...priorMessages,
         { role: "user", content: message },
       ], auth.userId);
@@ -92,7 +95,7 @@ export async function POST(request: Request) {
       const detail = providerError instanceof Error ? providerError.message : "Angel provider error";
       if (!detail.includes("not configured")) throw providerError;
       completion = {
-        content: buildKnowledgeFallback(selectedArticles, locale),
+        content: buildKnowledgeFallback(selectedArticles, locale, intent, profile?.full_name),
         model: "sajivo-rag-fallback-v1",
         promptTokens: null,
         completionTokens: null,

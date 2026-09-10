@@ -28,6 +28,12 @@ function PrimaryLink({ href, children }: { href: string; children: React.ReactNo
   return <Link href={href} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#d65f45] px-4 text-xs font-bold text-white shadow-[0_3px_0_#9f3d2b]">{children}</Link>;
 }
 
+async function rowsWhen<T>(needed: boolean, query: PromiseLike<{ data: T[] | null }>): Promise<T[]> {
+  if (!needed) return [];
+  const { data } = await query;
+  return data ?? [];
+}
+
 export async function LiveClientScreen({ mode }: { mode: Mode }) {
   const supabase = await createClient();
   if (!supabase) redirect("/login");
@@ -35,23 +41,17 @@ export async function LiveClientScreen({ mode }: { mode: Mode }) {
   if (!auth.user) redirect("/login");
   const userId = auth.user.id;
 
-  const [profileResult, projectsResult, requirementsResult, proposalsResult, documentsResult, notificationsResult, reviewsResult] = await Promise.all([
+  const [profileResult, projects, requirements, proposals, documents, notifications, reviews] = await Promise.all([
     supabase.from("profiles").select("id,full_name,email,phone,city,state,bio,account_status,verification_status,person_public_id,account_public_id,created_at").eq("id", userId).single(),
-    supabase.from("projects").select("id,title,status,city,state,budget_range,custom_budget,expected_timeline,created_at,updated_at").eq("customer_id", userId).order("updated_at", { ascending: false }),
-    supabase.from("requirements").select("id,public_id,title,project_type,status,budget,location,created_at,updated_at").eq("customer_id", userId).order("updated_at", { ascending: false }),
-    supabase.from("proposals").select("id,status,proposed_amount,proposed_amount_min,proposed_amount_max,estimated_timeline,created_at,project:projects!project_id(title),professional:profiles!professional_id(full_name,business_name,rating_avg)").eq("customer_id", userId).order("created_at", { ascending: false }),
-    supabase.from("financial_documents").select("id,public_id,document_type,document_number,total_amount,amount_paid,status,issuer_name,created_at").eq("account_id", userId).order("created_at", { ascending: false }),
-    supabase.from("notifications").select("id,kind,message,read_at,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(30),
-    supabase.from("reviews").select("id,rating,review_text,created_at,professional:profiles!professional_id(full_name,business_name)").eq("customer_id", userId).order("created_at", { ascending: false }),
+    rowsWhen(mode === "overview" || mode === "projects", supabase.from("projects").select("id,title,status,city,state,budget_range,custom_budget,expected_timeline,created_at,updated_at").eq("customer_id", userId).order("updated_at", { ascending: false })),
+    rowsWhen(mode === "overview" || mode === "requirements", supabase.from("requirements").select("id,public_id,title,project_type,status,budget,location,created_at,updated_at").eq("customer_id", userId).order("updated_at", { ascending: false })),
+    rowsWhen(mode === "overview" || mode === "proposals", supabase.from("proposals").select("id,status,proposed_amount,proposed_amount_min,proposed_amount_max,estimated_timeline,created_at,project:projects!project_id(title),professional:profiles!professional_id(full_name,business_name,rating_avg)").eq("customer_id", userId).order("created_at", { ascending: false })),
+    rowsWhen(mode === "overview" || mode === "documents", supabase.from("financial_documents").select("id,public_id,document_type,document_number,total_amount,amount_paid,status,issuer_name,created_at").eq("account_id", userId).order("created_at", { ascending: false })),
+    rowsWhen(mode === "overview" || mode === "messages" || mode === "settings", supabase.from("notifications").select("id,kind,message,read_at,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(30)),
+    rowsWhen(mode === "reviews", supabase.from("reviews").select("id,rating,review_text,created_at,professional:profiles!professional_id(full_name,business_name)").eq("customer_id", userId).order("created_at", { ascending: false })),
   ]);
 
   const profile = profileResult.data;
-  const projects = projectsResult.data ?? [];
-  const requirements = requirementsResult.data ?? [];
-  const proposals = proposalsResult.data ?? [];
-  const documents = documentsResult.data ?? [];
-  const notifications = notificationsResult.data ?? [];
-  const reviews = reviewsResult.data ?? [];
 
   if (mode === "overview") {
     const activeProjects = projects.filter((item) => !["completed", "cancelled", "archived", "draft"].includes(item.status)).length;

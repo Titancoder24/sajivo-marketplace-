@@ -37,6 +37,17 @@ export function normalizeMessage(value: unknown) {
   return String(value ?? "").replace(/\0/g, "").trim().slice(0, 4000);
 }
 
+export type AngelConversationIntent = "greeting" | "thanks" | "goodbye" | "platform_overview" | "question";
+
+export function classifyAngelIntent(message: string): AngelConversationIntent {
+  const normalized = message.toLowerCase().replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+  if (/^(hi|hello|hey|good morning|good afternoon|good evening|namaste|नमस्ते)$/.test(normalized)) return "greeting";
+  if (/^(thanks|thank you|thankyou|धन्यवाद|शुक्रिया)$/.test(normalized)) return "thanks";
+  if (/^(bye|goodbye|see you|अलविदा)$/.test(normalized)) return "goodbye";
+  if (/\b(what is sajivo|about sajivo|how sajivo works|sajivo platform)\b/.test(normalized)) return "platform_overview";
+  return "question";
+}
+
 export function safeMetadata(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return Object.fromEntries(Object.entries(value).slice(0, 20).map(([key, entry]) => [key.slice(0, 80), typeof entry === "string" ? entry.slice(0, 500) : entry]));
@@ -60,6 +71,9 @@ Your responsibilities:
 - Never ask for or reveal passwords, OTPs, recovery codes, full card details, bank credentials, secrets, or another user's information.
 - Never autonomously approve a refund, execute or release a payment, modify bank details, change identity data, bypass verification, alter account ownership, or perform another high-risk action.
 - Answer the user's exact question first. Do not repeat a generic Sajivo overview unless the user asks for one.
+- Treat greetings and thanks as conversation, not knowledge-search questions. Respond naturally and ask one useful follow-up.
+- Use the recent conversation to avoid repeating yourself and to resolve pronouns or follow-up questions.
+- Sound like a calm, capable human support specialist. Avoid labels such as "Short answer" and avoid mentioning retrieval, RAG, datasets, or context blocks.
 - Keep normal answers under 120 words and between two and five short sentences. Use a short list only when it improves clarity.
 - Respond in the requested conversation language. Hindi responses must use natural Devanagari Hindi.
 - Do not claim that an action was completed unless the application context explicitly confirms it.
@@ -138,13 +152,21 @@ export function rankKnowledge<T extends { title: string; summary: string; body: 
 export function buildKnowledgeFallback(
   articles: Array<{ title: string; summary: string; body: string }>,
   locale: "en" | "hi",
+  intent: AngelConversationIntent = "question",
+  firstName?: string,
 ) {
+  const name = firstName?.trim().split(/\s+/)[0];
+  if (intent === "greeting") {
+    return locale === "hi"
+      ? `नमस्ते${name ? ` ${name}` : ""}! मैं एंजेल हूं। आज मैं आपके प्रोजेक्ट, प्रोफेशनल खोजने, बजट, भुगतान या साजिवो अकाउंट में किस तरह मदद करूं?`
+      : `Hi${name ? ` ${name}` : ""}! I’m Angel. What can I help you with today: your project, finding a professional, budget, payments, or your Sajivo account?`;
+  }
+  if (intent === "thanks") return locale === "hi" ? "आपका स्वागत है! क्या मैं साजिवो में किसी और चीज़ में आपकी मदद करूं?" : "You’re welcome. Is there anything else you’d like help with in Sajivo?";
+  if (intent === "goodbye") return locale === "hi" ? "फिर मिलेंगे! जब भी ज़रूरत हो, मैं यहीं हूं।" : "See you soon. I’ll be here whenever you need help.";
   if (!articles.length) {
     return locale === "hi"
       ? "मुझे इस प्रश्न के लिए प्रकाशित साजिवो जानकारी नहीं मिली। मैं इसे साजिवो सपोर्ट विशेषज्ञ को संदर्भ सहित भेज सकता हूं।"
       : "I could not find published Sajivo information for that question. I can hand this to a Sajivo support specialist with the relevant conversation context.";
   }
-  const selected = articles.slice(0, 1);
-  const intro = locale === "hi" ? "संक्षिप्त उत्तर:" : "Short answer:";
-  return [intro, ...selected.map((article) => article.summary.trim())].join("\n\n").slice(0, 1200);
+  return articles[0].summary.trim().slice(0, 1200);
 }

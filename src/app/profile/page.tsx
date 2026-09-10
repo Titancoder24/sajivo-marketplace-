@@ -1,23 +1,13 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-import { Camera, CheckCircle2, MapPin, Plus, ShieldCheck, UserRound, X } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { DashboardHeader } from "@/components/sajivo/DashboardBlocks";
-import { Button } from "@/components/ui/button";
-import { Input, Label, Textarea } from "@/components/ui/input";
-
-export default function ProfilePage() {
-  const [services, setServices] = useState(["Full Home Interior Design", "Modular Kitchen", "Space Planning"]);
-  const [areas, setAreas] = useState(["Indiranagar", "Whitefield", "HSR Layout"]);
-  const [serviceDraft, setServiceDraft] = useState("");
-
-  function addService() {
-    const value = serviceDraft.trim();
-    if (!value || services.includes(value)) return;
-    setServices((current) => [...current, value]);
-    setServiceDraft("");
-  }
-
-  return <main className="page-shell py-6 sm:py-10"><DashboardHeader title="Profile" text="Keep your identity, business details, and service coverage accurate." action={<Button onClick={() => toast.success("Profile saved")}><CheckCircle2 size={16} /> Save changes</Button>} /><div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]"><aside className="h-fit rounded-lg border border-[var(--rv-border)] bg-white p-5"><div className="relative mx-auto w-fit"><span className="grid h-24 w-24 place-items-center rounded-full bg-[var(--rv-slate)] font-display text-2xl text-white">AS</span><button type="button" onClick={() => toast.success("Photo picker opened")} className="rv-focus absolute bottom-0 right-0 grid h-9 w-9 place-items-center rounded-full border-2 border-white bg-[var(--rv-terracotta)] text-white" aria-label="Change profile photo"><Camera size={16} /></button></div><div className="mt-4 text-center"><h2 className="font-display text-xl">Aarav Sharma</h2><p className="mt-1 text-sm text-[var(--rv-ink-2)]">Customer profile</p><span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"><ShieldCheck size={13} /> Email verified</span></div><div className="mt-5 border-t border-[var(--rv-border)] pt-4"><div className="flex justify-between text-xs"><span className="text-[var(--rv-ink-2)]">Profile completeness</span><strong>85%</strong></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--rv-bg)]"><div className="h-full w-[85%] rounded-full bg-[var(--rv-terracotta)]" /></div></div></aside><form className="overflow-hidden rounded-lg border border-[var(--rv-border)] bg-white" onSubmit={(event) => { event.preventDefault(); toast.success("Profile saved"); }}><section className="p-5 sm:p-6"><div className="mb-5 flex items-center gap-2"><UserRound size={18} className="text-[var(--rv-terracotta)]" /><div><h2 className="font-bold">Personal information</h2><p className="mt-0.5 text-xs text-[var(--rv-ink-2)]">Shown to professionals you work with.</p></div></div><div className="grid gap-4 sm:grid-cols-2"><div><Label htmlFor="full-name">Full name</Label><Input id="full-name" defaultValue="Aarav Sharma" autoComplete="name" /></div><div><Label htmlFor="phone">Phone number</Label><Input id="phone" type="tel" defaultValue="+91 98765 43210" autoComplete="tel" /></div><div><Label htmlFor="profile-email">Email address</Label><Input id="profile-email" type="email" defaultValue="customer@sajivo.com" autoComplete="email" /></div><div><Label htmlFor="city">City</Label><div className="relative"><MapPin className="absolute left-3 top-3.5 text-[var(--rv-ink-2)]" size={16} /><Input id="city" className="pl-9" defaultValue="Bengaluru" /></div></div><div className="sm:col-span-2"><Label htmlFor="bio">About</Label><Textarea id="bio" defaultValue="Planning a warm, functional home with thoughtful storage and low-maintenance materials." className="min-h-28" /></div></div></section><section className="border-t border-[var(--rv-border)] p-5 sm:p-6"><h2 className="font-bold">Services & coverage</h2><p className="mt-1 text-xs text-[var(--rv-ink-2)]">Used to personalise recommendations and professional matches.</p><div className="mt-5"><Label htmlFor="services">Services</Label><div className="flex gap-2"><Input id="services" placeholder="Add a service" value={serviceDraft} onChange={(event) => setServiceDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addService(); } }} /><Button type="button" variant="outline" size="icon" onClick={addService} aria-label="Add service"><Plus size={17} /></Button></div><div className="mt-3 flex flex-wrap gap-2">{services.map((service) => <span key={service} className="inline-flex items-center gap-1 rounded-full bg-[var(--rv-bg)] px-3 py-1.5 text-xs font-semibold">{service}<button type="button" onClick={() => setServices((current) => current.filter((item) => item !== service))} aria-label={`Remove ${service}`}><X size={13} /></button></span>)}</div></div><div className="mt-5"><Label>Service areas</Label><div className="flex flex-wrap gap-2">{areas.map((area) => <span key={area} className="inline-flex items-center gap-1 rounded-full border border-[var(--rv-border)] px-3 py-1.5 text-xs font-semibold"><MapPin size={12} />{area}<button type="button" onClick={() => setAreas((current) => current.filter((item) => item !== area))} aria-label={`Remove ${area}`}><X size={13} /></button></span>)}<button type="button" onClick={() => setAreas((current) => current.includes("Koramangala") ? current : [...current, "Koramangala"])} className="rv-focus inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--rv-border)] px-3 py-1.5 text-xs font-semibold text-[var(--rv-ink-2)]"><Plus size={12} /> Add area</button></div></div></section><footer className="flex justify-end border-t border-[var(--rv-border)] bg-[var(--rv-bg)] px-5 py-4 sm:px-6"><Button><CheckCircle2 size={16} /> Save profile</Button></footer></form></div></main>;
+export default async function ProfilePage() {
+  const supabase = await createClient();
+  if (!supabase) redirect("/login");
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) redirect("/login?next=%2Fprofile");
+  const { data: profile } = await supabase.from("profiles").select("primary_role").eq("id", auth.user.id).maybeSingle();
+  if (profile?.primary_role === "designer" || profile?.primary_role === "contractor") redirect("/v2/professional/settings");
+  if (profile?.primary_role === "vendor") redirect("/vendor/dashboard");
+  redirect("/v2/client/profile");
 }

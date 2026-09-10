@@ -65,13 +65,13 @@ export function ClientProfileEditor({ initialProfile }: { initialProfile: Profil
       </aside>
 
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <Field label="Full name"><input className={inputClass} name="fullName" defaultValue={profile.full_name || ""} disabled={!editing} required /></Field>
+        <Field label="Full name"><input key={`name-${editing}-${profile.full_name}`} className={inputClass} name="fullName" defaultValue={profile.full_name || ""} disabled={!editing} required /></Field>
         <Field label="Email address"><input className={inputClass} value={profile.email || ""} disabled aria-describedby="email-note" /><span id="email-note" className="mt-1 block text-[10px] text-[#7b8580]">Managed through account security.</span></Field>
-        <Field label="Phone number"><input className={inputClass} name="phone" defaultValue={profile.phone || ""} disabled={!editing} /></Field>
-        <Field label="City"><input className={inputClass} name="city" defaultValue={profile.city || ""} disabled={!editing} /></Field>
-        <Field label="State"><input className={inputClass} name="state" defaultValue={profile.state || ""} disabled={!editing} /></Field>
+        <Field label="Phone number"><input key={`phone-${editing}-${profile.phone}`} className={inputClass} name="phone" defaultValue={profile.phone || ""} disabled={!editing} /></Field>
+        <Field label="City"><input key={`city-${editing}-${profile.city}`} className={inputClass} name="city" defaultValue={profile.city || ""} disabled={!editing} /></Field>
+        <Field label="State"><input key={`state-${editing}-${profile.state}`} className={inputClass} name="state" defaultValue={profile.state || ""} disabled={!editing} /></Field>
         <Field label="Account status"><input className={`${inputClass} capitalize`} value={profile.account_status || "active"} disabled /></Field>
-        <label className="grid gap-2 text-xs font-bold sm:col-span-2">About you<textarea className="min-h-28 w-full resize-y rounded-md border border-[#d9dfdb] bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#d65f45] focus:ring-2 focus:ring-[#d65f45]/15 disabled:bg-[#f4f6f4]" name="bio" defaultValue={profile.bio || ""} disabled={!editing} maxLength={1000}/></label>
+        <label className="grid gap-2 text-xs font-bold sm:col-span-2">About you<textarea key={`bio-${editing}-${profile.bio}`} className="min-h-28 w-full resize-y rounded-md border border-[#d9dfdb] bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#d65f45] focus:ring-2 focus:ring-[#d65f45]/15 disabled:bg-[#f4f6f4]" name="bio" defaultValue={profile.bio || ""} disabled={!editing} maxLength={1000}/></label>
         {editing ? <div className="flex flex-wrap justify-end gap-2 sm:col-span-2">
           <button type="button" onClick={() => setEditing(false)} className="inline-flex h-10 items-center gap-2 rounded-md border border-[#d8ded9] bg-white px-4 text-xs font-bold"><X size={14}/>Cancel</button>
           <button disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#d65f45] px-4 text-xs font-bold text-white shadow-[0_3px_0_#9f3d2b] disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>}Save profile</button>

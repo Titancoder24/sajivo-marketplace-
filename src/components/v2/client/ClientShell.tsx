@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Bell, BriefcaseBusiness, ChevronDown, CircleHelp, ClipboardList, CreditCard, FileText, FolderKanban, Home, LogOut, Menu, MessageSquare, Plus, Search, Settings, Star, User, X } from "lucide-react";
 import styles from "./ClientOS.module.css";
 import { SajivoLogo } from "@/components/brand/SajivoLogo";
@@ -16,11 +16,9 @@ const workspace = [
 ] as const;
 const account = [["Profile", "/v2/client/profile", User], ["Settings", "/v2/client/settings", Settings]] as const;
 
-export function ClientShell({children}:{children:React.ReactNode}) {
+export function ClientShell({children,initialProfile}:{children:React.ReactNode;initialProfile:{full_name:string|null;email:string|null}}) {
   const pathname=usePathname(); const router=useRouter(); const [open,setOpen]=useState(false);
-  const [profile,setProfile]=useState<{full_name?:string;email?:string}|null>(null);
-  useEffect(()=>{let active=true;fetch("/api/auth/me",{cache:"no-store"}).then(async response=>response.ok?response.json():null).then(payload=>{if(active)setProfile(payload?.profile??null)}).catch(()=>undefined);return()=>{active=false}},[]);
-  const initials=profile?.full_name?.split(" ").map(word=>word[0]).join("").slice(0,2).toUpperCase()||"SJ";
+  const initials=initialProfile.full_name?.split(" ").map(word=>word[0]).join("").slice(0,2).toUpperCase()||"SJ";
   async function logout(){await fetch("/api/auth/logout",{method:"POST"});router.replace("/login");router.refresh()}
   const nav=(items:typeof workspace|typeof account)=>items.map(([label,href,Icon])=>{
     const active=href==="/v2/client"?pathname===href:pathname.startsWith(href);
@@ -30,7 +28,7 @@ export function ClientShell({children}:{children:React.ReactNode}) {
     {open&&<button aria-label="Close navigation" className={styles.mobileOverlay} onClick={()=>setOpen(false)}/>} 
     <aside className={`${styles.sidebar} ${open?styles.sidebarOpen:""}`}>
       <div className={styles.brand}><SajivoLogo compact/><button aria-label="Close navigation" className={`${styles.iconButton} ${styles.mobileButton}`} style={{marginLeft:"auto"}} onClick={()=>setOpen(false)}><X size={18}/></button></div>
-      <Link href="/v2/client/profile" className={styles.account}><span className={styles.avatar}>{initials}</span><span className={styles.accountCopy}><strong>{profile?.full_name||"Your account"}</strong><span>Customer workspace</span></span><ChevronDown size={14}/></Link>
+      <Link href="/v2/client/profile" className={styles.account}><span className={styles.avatar}>{initials}</span><span className={styles.accountCopy}><strong>{initialProfile.full_name||"Your account"}</strong><span>Customer workspace</span></span><ChevronDown size={14}/></Link>
       <nav className={styles.nav}><p className={styles.navLabel}>Workspace</p>{nav(workspace)}<p className={styles.navLabel}>Account</p>{nav(account)}</nav>
       <div className={styles.sideFooter}><Link href="/v2/support" className={styles.navLink}><CircleHelp size={16}/>Help & support</Link><button type="button" onClick={logout} className={styles.navLink}><LogOut size={16}/>Log out</button></div>
     </aside>

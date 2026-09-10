@@ -110,9 +110,12 @@ export async function getProjectsForRole(role: UserRole) {
   const supabase = await createClient();
   if (!supabase) return [];
   const discoverable = ["published", "receiving_proposals", "matching"];
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return [];
+  const base = supabase.from("projects").select("*, files_count:project_files(count), proposals_count:proposals(count)");
   const query = role === "customer"
-    ? supabase.from("projects").select("*, files_count:project_files(count), proposals_count:proposals(count)").order("created_at", { ascending: false })
-    : supabase.from("projects").select("*, files_count:project_files(count), proposals_count:proposals(count)").in("status", discoverable).order("created_at", { ascending: false });
+    ? base.eq("customer_id", authData.user.id).order("created_at", { ascending: false })
+    : base.in("status", discoverable).order("created_at", { ascending: false });
   const { data, error } = await query;
   if (error || !data) return [];
   return data.map(toProject);

@@ -79,6 +79,7 @@ async function getPage(params: Params) {
       .eq("city_slug", params.city)
       .eq("service_slug", params.service)
       .eq("status", "published")
+      .eq("indexing_allowed", true)
       .maybeSingle();
     if (data) return data as SeoPage;
   }

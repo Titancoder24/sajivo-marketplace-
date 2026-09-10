@@ -21,6 +21,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SajivoLogo } from "@/components/brand/SajivoLogo";
+import { GlobalLeadContact } from "@/components/layout/GlobalLeadContact";
 
 const navigation = [
   { href: "/v2", label: "Explore", icon: Home },
@@ -53,6 +54,7 @@ export function V2Shell({ children, initialProfile, isPlatformAdmin = false }: {
 
   return (
     <div className="min-h-screen bg-[#f6f7f5] text-[#1c2421]">
+      <GlobalLeadContact />
       <header className="sticky top-0 z-50 border-b border-[#dfe3df] bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[70px] max-w-[1480px] items-center gap-5 px-4 sm:px-6 lg:px-8">
           <SajivoLogo compact />

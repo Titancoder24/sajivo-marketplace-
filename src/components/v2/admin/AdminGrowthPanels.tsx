@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Activity, CheckCircle2, Eye, Globe2, KeyRound, Loader2, MousePointer2, Plus, ShieldCheck, UsersRound } from "lucide-react";
+import { CheckCircle2, Eye, Globe2, KeyRound, Loader2, Plus, ShieldCheck } from "lucide-react";
+import { MonoAnalyticsSuite, type AnalyticsSummary } from "./MonoAnalyticsSuite";
 
-type Analytics = { summary: { dau: number; mau: number; sessions24h: number; sessions30d: number; pageViews24h: number; pageViews30d: number; topRoutes: Array<{ path: string; views: number; sessions: number }>; daily: Array<{ day: string; views: number; sessions: number; active_users: number }> }; heatmap: Array<{ path: string; x_bucket: number; y_bucket: number; clicks: number }> };
+type Analytics = { summary: AnalyticsSummary; heatmap: Array<{ path: string; x_bucket: number; y_bucket: number; clicks: number }> };
 
 export function AnalyticsPanel() {
   const [data, setData] = useState<Analytics | null>(null); const [loading, setLoading] = useState(true); const [path, setPath] = useState("");
@@ -13,11 +14,8 @@ export function AnalyticsPanel() {
   useEffect(() => { void load(""); }, []);
   if (loading && !data) return <Loading />;
   if (!data) return null;
-  const metrics = [["Daily active users", data.summary.dau, UsersRound],["Monthly active users", data.summary.mau, UsersRound],["Sessions · 24h", data.summary.sessions24h, Activity],["Sessions · 30d", data.summary.sessions30d, Activity],["Page views · 24h", data.summary.pageViews24h, Eye],["Page views · 30d", data.summary.pageViews30d, Eye]] as const;
-  return <div className="space-y-5"><section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{metrics.map(([label,value,Icon]) => <article key={label} className="rounded-md border border-[#dce1dd] bg-white p-5"><div className="flex items-center justify-between"><span className="grid h-9 w-9 place-items-center rounded bg-[#edf3ef] text-[#345548]"><Icon size={18} /></span><b className="text-3xl">{value}</b></div><p className="mt-5 text-xs font-bold text-[#68736d]">{label}</p></article>)}</section><div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]"><section className="rounded-md border border-[#dce1dd] bg-white"><header className="border-b border-[#e5e9e6] p-5"><h2 className="text-sm font-extrabold">Top routes · 30 days</h2></header><div className="divide-y divide-[#edf0ee]">{data.summary.topRoutes.map((route,index) => <div key={route.path} className="grid grid-cols-[30px_minmax(0,1fr)_70px_70px] items-center gap-3 px-5 py-4 text-xs"><span className="text-[#929a96]">{index+1}</span><span className="truncate font-bold">{route.path}</span><span className="text-right">{route.views} views</span><span className="text-right text-[#6f7974]">{route.sessions} sessions</span></div>)}</div></section><section className="rounded-md border border-[#dce1dd] bg-white p-5"><div className="flex items-start justify-between"><div><h2 className="text-sm font-extrabold">Click heatmap</h2><p className="mt-1 text-[10px] text-[#75807a]">Normalized viewport activity · 30 days</p></div><MousePointer2 size={18} className="text-[#d65f45]" /></div><div className="mt-4 flex gap-2"><select value={path} onChange={(event) => setPath(event.target.value)} className="h-9 min-w-0 flex-1 rounded border border-[#d6dcd8] bg-white px-2 text-xs"><option value="">All routes</option>{data.summary.topRoutes.map((route) => <option key={route.path} value={route.path}>{route.path}</option>)}</select><button onClick={() => void load(path)} className="h-9 rounded bg-[#1d2a27] px-3 text-xs font-bold text-white">Apply</button></div><Heatmap points={data.heatmap} /></section></div></div>;
+  return <div className="space-y-4"><div className="flex flex-wrap items-center gap-2"><select value={path} onChange={(event) => setPath(event.target.value)} className="h-9 min-w-56 rounded border border-[#d6dcd8] bg-white px-2 text-xs"><option value="">All routes</option>{data.summary.topRoutes.map((route) => <option key={route.path} value={route.path}>{route.path}</option>)}</select><button onClick={() => void load(path)} className="h-9 rounded bg-[#1d2a27] px-3 text-xs font-bold text-white">Apply heatmap filter</button></div><MonoAnalyticsSuite live={data.summary} heatmap={data.heatmap}/></div>;
 }
-
-function Heatmap({ points }: { points: Analytics["heatmap"] }) { const maximum = Math.max(1, ...points.map((point) => point.clicks)); const cells = useMemo(() => Array.from({ length: 100 }, (_, index) => { const x=index%10,y=Math.floor(index/10); const clicks=points.filter((point) => point.x_bucket===x&&point.y_bucket===y).reduce((sum,point)=>sum+point.clicks,0); return {x,y,clicks}; }), [points]); return <div className="mt-4 grid aspect-[4/3] grid-cols-10 overflow-hidden rounded border border-[#dfe4e0] bg-[#f7f9f7]">{cells.map((cell) => <div key={`${cell.x}-${cell.y}`} title={`${cell.clicks} clicks`} className="border-b border-r border-white/55" style={{ background: cell.clicks ? `rgba(214,95,69,${0.16 + (cell.clicks/maximum)*0.74})` : "transparent" }} />)}</div>; }
 
 type SeoPage = { id: string; state_name: string; city_name: string; service_name: string; route_path: string; title: string; status: string; target_keywords: string[]; published_at: string | null; updated_at: string };
 type HighIntentRoute = {

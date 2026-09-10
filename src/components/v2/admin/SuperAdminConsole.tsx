@@ -5,11 +5,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Activity, BarChart3, BookOpenCheck, Bot, CalendarClock, CheckCircle2, ChevronRight, CircleAlert,
-  Globe2, KeyRound,
+  Globe2, KeyRound, Phone, Layers3,
   Headphones, LayoutDashboard, Loader2, LockKeyhole, MessageSquareText, RefreshCw, Send,
   ShieldCheck, TicketCheck, UsersRound,
 } from "lucide-react";
 import { AnalyticsPanel, IntegrationsPanel, SeoPanel } from "./AdminGrowthPanels";
+import { ContactSettingsPanel } from "./ContactSettingsPanel";
+import { BulkSeoStudioPanel } from "./BulkSeoStudioPanel";
 
 type Overview = {
   admin: { role: string; permissions: string[] };
@@ -20,7 +22,7 @@ type Overview = {
 };
 
 type ThreadDetail = { conversation: Overview["conversations"][number] & { summary?: string | null }; messages: Array<{ id: string; sender: string; content: string; safety_flags: string[]; created_at: string }> };
-type Section = "overview" | "analytics" | "conversations" | "tickets" | "knowledge" | "seo" | "integrations";
+type Section = "overview" | "analytics" | "conversations" | "tickets" | "knowledge" | "seo" | "seo-bulk" | "contact" | "integrations";
 
 const sectionNav = [
   { key: "overview", label: "Overview", Icon: LayoutDashboard },
@@ -29,6 +31,8 @@ const sectionNav = [
   { key: "tickets", label: "Support tickets", Icon: TicketCheck },
   { key: "knowledge", label: "Knowledge base", Icon: BookOpenCheck },
   { key: "seo", label: "SEO & GEO", Icon: Globe2 },
+  { key: "seo-bulk", label: "Bulk SEO studio", Icon: Layers3 },
+  { key: "contact", label: "Lead contact", Icon: Phone },
   { key: "integrations", label: "Integrations", Icon: KeyRound },
 ] as const;
 
@@ -85,6 +89,8 @@ export function SuperAdminConsole() {
             {section === "tickets" ? <TicketsPanel data={data} /> : null}
             {section === "knowledge" ? <KnowledgePanel data={data} selected={selectedArticle} onSelect={setSelectedArticle} onRefresh={load} /> : null}
             {section === "seo" ? <SeoPanel /> : null}
+            {section === "seo-bulk" ? <BulkSeoStudioPanel /> : null}
+            {section === "contact" ? <ContactSettingsPanel /> : null}
             {section === "integrations" ? <IntegrationsPanel /> : null}
           </div>
         </main>

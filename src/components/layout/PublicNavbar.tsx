@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Heart, Home, Menu, Search, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/sajivo/BrandMark";
+import { GlobalLeadContact } from "@/components/layout/GlobalLeadContact";
 
 const links = [
   ["Explore", "/services"],
@@ -19,6 +20,7 @@ export function PublicNavbar() {
 
   return (
     <>
+      <GlobalLeadContact />
       <header className="sticky top-0 z-50 border-b border-black/10 bg-white/95 backdrop-blur-xl">
         <div className="page-shell flex h-[72px] items-center justify-between gap-5">
           <BrandMark />

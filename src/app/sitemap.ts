@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from("seo_pages")
     .select("route_path, updated_at")
     .eq("status", "published")
+    .eq("indexing_allowed", true)
     .in("service_slug", PROGRAMMATIC_SEO_SLUGS)
     .limit(5000);
   const managed = (data ?? []).map((page) => ({ url: `${base}${page.route_path}`, lastModified: page.updated_at, changeFrequency: "weekly" as const, priority: 0.7 }));

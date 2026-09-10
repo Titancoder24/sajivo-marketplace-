@@ -61,10 +61,11 @@ export async function POST(request: Request) {
     auth.supabase.from("ai_support_messages").select("sender, content").eq("conversation_id", conversationId).order("created_at", { ascending: false }).limit(12),
   ]);
 
-  const matched = (ranked?.length ? ranked : rankKnowledge(articles ?? [], message)) as KnowledgeArticle[];
-  const selectedArticles = [...((anchors ?? []) as KnowledgeArticle[]), ...matched]
+  const localMatches = rankKnowledge((articles ?? []) as KnowledgeArticle[], message);
+  const matched = [...localMatches, ...((ranked ?? []) as KnowledgeArticle[])];
+  const selectedArticles = [...matched, ...(!matched.length ? (anchors ?? []) as KnowledgeArticle[] : [])]
     .filter((article, index, all) => all.findIndex((candidate) => candidate.slug === article.slug) === index)
-    .slice(0, 8);
+    .slice(0, 3);
   const accountContext = JSON.stringify({ profile, projects: projects ?? [], creditWallets: wallet ?? [], subscription, recentPayments: payments ?? [] });
   const knowledgeContext = selectedArticles.map((article, index) => `[KB${index + 1}] ${article.title}\nSummary: ${article.summary}\n${article.body}`).join("\n\n");
   const priorMessages = [...(history ?? [])].reverse().filter((entry) => entry.sender === "user" || entry.sender === "assistant").map((entry) => ({ role: entry.sender as "user" | "assistant", content: entry.content }));

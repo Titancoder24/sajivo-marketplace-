@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, BriefcaseBusiness, Camera, MapPin } from "lucide-react";
 import { BrandMark } from "@/components/sajivo/BrandMark";
+import { SocialLinks } from "@/components/sajivo/SocialLinks";
 
 const groups = [
   ["Explore", [["Services", "/services"], ["Find professionals", "/professionals"], ["Vendors / Businesses", "/for-professionals"], ["How Sajivo Works", "/how-it-works"]]],
@@ -18,7 +19,7 @@ export function PublicFooter() {
             <p className="mt-5 max-w-sm text-sm leading-6 text-[var(--rv-ink-2)]">A clearer way to discover trusted interior professionals and manage every decision from brief to handover.</p>
             <p className="mt-5 flex items-center gap-2 text-sm font-semibold"><MapPin size={16} /> Built for projects globally</p>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {groups.map(([title, items]) => (
               <div key={title}>
                 <h3 className="text-sm font-bold">{title}</h3>
@@ -27,6 +28,10 @@ export function PublicFooter() {
                 </div>
               </div>
             ))}
+            <div>
+              <h3 className="text-sm font-bold">Follow Sajivo</h3>
+              <div className="mt-4"><SocialLinks /></div>
+            </div>
           </div>
         </div>
         <div className="mt-10 flex flex-col gap-4 border-t border-[var(--rv-border)] pt-6 text-xs text-[var(--rv-ink-2)] sm:flex-row sm:items-center sm:justify-between">

@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -14,7 +15,7 @@ export type AngelAuth = {
 export async function getAngelAuth(): Promise<AngelAuth | null> {
   const supabase = await createClient();
   if (!supabase) return null;
-  const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await getActiveUser(supabase);
   if (error || !data.user) return null;
   return { supabase, userId: data.user.id };
 }

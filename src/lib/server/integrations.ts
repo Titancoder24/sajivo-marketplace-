@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import "server-only";
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
@@ -33,7 +34,7 @@ export async function getRuntimeIntegration(provider: IntegrationProvider) {
   if (!runtimeToken || !url || !key) return null;
   const supabase = await createClient();
   if (!supabase) return null;
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData } = await getActiveUser(supabase);
   if (!userData.user) return null;
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;

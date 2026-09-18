@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -10,7 +11,7 @@ const responseSchema = z.object({
 export async function GET() {
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Opportunities are unavailable because Supabase is not configured." }, { status: 503 });
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const { data, error } = await supabase
@@ -27,7 +28,7 @@ export async function PATCH(request: NextRequest) {
   if (!result.success) return NextResponse.json({ error: result.error.issues[0]?.message ?? "Invalid response" }, { status: 400 });
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Opportunities are unavailable because Supabase is not configured." }, { status: 503 });
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
 
   const { data, error } = await supabase

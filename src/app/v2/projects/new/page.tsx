@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,7 +12,7 @@ const roleHome: Record<string, string> = {
 export default async function StartProjectBriefPage() {
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured for this deployment.");
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getActiveUser(supabase);
   if (!auth.user) redirect("/login?next=%2Fv2%2Fprojects%2Fnew");
   const { data: profile } = await supabase.from("profiles").select("primary_role").eq("id", auth.user.id).maybeSingle();
   if (profile?.primary_role && profile.primary_role !== "customer") redirect(roleHome[profile.primary_role] ?? "/v2");

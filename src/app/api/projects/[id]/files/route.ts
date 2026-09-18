@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,7 +25,7 @@ export async function GET(
       { status: 503 },
     );
   const [{ id: projectId }, { data: authData, error: authError }] =
-    await Promise.all([params, supabase.auth.getUser()]);
+    await Promise.all([params, getActiveUser(supabase)]);
   if (authError || !authData.user)
     return NextResponse.json(
       { error: "Sign in to view project files." },
@@ -69,7 +70,7 @@ export async function POST(
     );
 
   const [{ id: projectId }, { data: authData, error: authError }] =
-    await Promise.all([params, supabase.auth.getUser()]);
+    await Promise.all([params, getActiveUser(supabase)]);
   if (authError || !authData.user)
     return NextResponse.json(
       { error: "Sign in to upload project files." },

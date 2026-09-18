@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,7 +8,7 @@ export async function GET() {
 
   const [{ data: plans, error: planError }, { data: authData }] = await Promise.all([
     supabase.from("subscription_plans").select("id, slug, name, audience, billing_period, price, currency, entitlements, limits").eq("is_active", true).order("sort_order"),
-    supabase.auth.getUser(),
+    getActiveUser(supabase),
   ]);
   if (planError) return NextResponse.json({ error: planError.message }, { status: 400 });
 

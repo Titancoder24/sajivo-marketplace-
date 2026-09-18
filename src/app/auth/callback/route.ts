@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveUser } from "@/lib/supabase/account-access";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -11,5 +12,10 @@ export async function GET(request: Request) {
   if (!supabase) return NextResponse.redirect(new URL("/login?status=configuration_error", url.origin));
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return NextResponse.redirect(new URL("/login?error=expired_auth_link", url.origin));
+  const access = await getActiveUser(supabase);
+  if (access.error || !access.data.user) {
+    await supabase.auth.signOut({ scope: "local" });
+    return NextResponse.redirect(new URL("/login?status=account_unavailable", url.origin));
+  }
   return NextResponse.redirect(new URL(next, url.origin));
 }

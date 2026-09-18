@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextResponse } from "next/server";
 import { CITY_RATES, MATERIAL_FACTORS, QUALITY_FACTORS } from "@/lib/estimator";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +10,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   const { data: profile } = await supabase.from("profiles").select("primary_role").eq("id", authData.user.id).single();
   if (profile?.primary_role !== "admin") return NextResponse.json({ error: "Admin access required" }, { status: 403 });

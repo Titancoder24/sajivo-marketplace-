@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +21,7 @@ export async function POST(
       { error: "Supabase is not configured." },
       { status: 503 },
     );
-  const { data: auth, error: authError } = await supabase.auth.getUser();
+  const { data: auth, error: authError } = await getActiveUser(supabase);
   if (authError || !auth.user)
     return NextResponse.json(
       { error: "Sign in to create milestones." },

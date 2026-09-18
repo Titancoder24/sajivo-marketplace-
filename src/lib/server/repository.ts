@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { services } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, Project, Proposal, UserRole } from "@/types/domain";
@@ -110,7 +111,7 @@ export async function getProjectsForRole(role: UserRole) {
   const supabase = await createClient();
   if (!supabase) return [];
   const discoverable = ["published", "receiving_proposals", "matching"];
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) return [];
   const base = supabase.from("projects").select("*, files_count:project_files(count), proposals_count:proposals(count)");
   const query = role === "customer"
@@ -173,7 +174,7 @@ export async function getNotifications() {
 export async function getCurrentProfile() {
   const supabase = await createClient();
   if (!supabase) return null;
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) return null;
   const { data } = await supabase.from("profiles").select("*").eq("id", authData.user.id).single();
   return data ? toProfile(data) : null;
@@ -228,7 +229,7 @@ export type VendorDashboardData = {
 export async function getVendorDashboardData(): Promise<VendorDashboardData> {
   const supabase = await createClient();
   if (!supabase) return { enquiries: [], orders: [], products: [] };
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) return { enquiries: [], orders: [], products: [] };
 
   const [enquiriesResult, ordersResult, productsResult] = await Promise.all([

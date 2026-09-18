@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import "server-only";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -19,7 +20,7 @@ export async function requireDashboardRoles(expectedRoles: Array<Exclude<UserRol
   const supabase = await createClient();
   const expectedRole = expectedRoles[0];
   if (!supabase) redirect("/login?status=configuration_error");
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await getActiveUser(supabase);
   if (!authData.user) {
     redirect(`/login?next=${encodeURIComponent(roleHome[expectedRole])}`);
   }

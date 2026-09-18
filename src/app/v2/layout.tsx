@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import type { Metadata } from "next";
 import { V2Shell } from "@/components/v2/V2Shell";
 import { createClient } from "@/lib/supabase/server";
@@ -12,7 +13,7 @@ export default async function V2Layout({ children }: { children: React.ReactNode
   let profile: { full_name?: string; primary_role?: string } | null = null;
   let isPlatformAdmin = false;
   if (supabase) {
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth } = await getActiveUser(supabase);
     if (auth.user) {
       const [{ data }, { data: admin }] = await Promise.all([
         supabase.from("profiles").select("full_name,primary_role").eq("id", auth.user.id).maybeSingle(),

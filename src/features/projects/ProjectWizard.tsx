@@ -157,23 +157,23 @@ export function ProjectWizard() {
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-[var(--rv-border)] bg-white">
-      <div className="grid lg:grid-cols-[250px_minmax(0,1fr)]">
-        <aside className="border-b border-[var(--rv-border)] bg-[var(--rv-bg)] p-4 lg:border-b-0 lg:border-r lg:p-5">
+    <section className="min-w-0 rounded-lg border border-[var(--rv-border)] bg-white [overflow-wrap:anywhere]">
+      <div className="grid grid-cols-1 lg:grid-cols-[250px_minmax(0,1fr)]">
+        <aside className="min-w-0 border-b border-[var(--rv-border)] bg-[var(--rv-bg)] p-4 lg:border-b-0 lg:border-r lg:p-5">
           <div className="flex items-end justify-between gap-3 lg:block">
             <div><p className="text-xs font-bold uppercase text-[var(--rv-ink-2)]">New project brief</p><p className="mt-1 text-sm font-semibold">Step {step + 1} of {steps.length}</p></div>
             <span className="text-xs font-bold text-[var(--rv-terracotta)]">{progress}%</span>
           </div>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white"><motion.div className="h-full rounded-full bg-[var(--rv-terracotta)]" animate={{ width: `${progress}%` }} /></div>
-          <ol className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:grid lg:gap-1" aria-label="Project creation progress">
+          <ol className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-1 lg:gap-1" aria-label="Project creation progress">
             {steps.map((item, index) => (
-              <li key={item.label} className="shrink-0">
+              <li key={item.label} className="min-w-0">
                 <button
                   type="button"
                   onClick={() => index <= step && setStep(index)}
                   disabled={index > step}
                   aria-current={index === step ? "step" : undefined}
-                  className={`rv-focus flex min-w-32 items-center gap-3 rounded-md px-3 py-2.5 text-left lg:w-full ${index === step ? "bg-white shadow-sm" : "hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-55"}`}
+                  className={`rv-focus flex min-h-16 w-full min-w-0 flex-col items-center gap-1 rounded-md px-1 py-2.5 text-center lg:min-h-0 lg:flex-row lg:gap-3 lg:px-3 lg:text-left ${index === step ? "bg-white shadow-sm" : "hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-55"}`}
                 >
                   <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold ${index < step ? "bg-emerald-500 text-white" : index === step ? "bg-[var(--rv-terracotta)] text-white" : "border border-[var(--rv-border)] bg-white text-[var(--rv-ink-2)]"}`}>{index < step ? <Check size={14} /> : index + 1}</span>
                   <span><span className="block text-sm font-semibold">{item.label}</span><span className="hidden text-xs text-[var(--rv-ink-2)] lg:block">{item.description}</span></span>
@@ -236,7 +236,7 @@ export function ProjectWizard() {
                 )}
 
                 {step === 4 && (
-                  <div className="grid gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <input ref={fileInput} type="file" multiple className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.dwg" onChange={(event) => addFiles(event.target.files)} />
                     <button type="button" onClick={() => fileInput.current?.click()} className="rv-focus rounded-lg border border-dashed border-[var(--rv-border)] bg-[var(--rv-bg)] p-10 text-center hover:border-[var(--rv-terracotta)]"><span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white text-[var(--rv-terracotta)] shadow-sm"><UploadCloud size={23} /></span><h3 className="font-display mt-4 text-xl">Upload plans, photos, or inspiration</h3><p className="mt-2 text-sm text-[var(--rv-ink-2)]">PDF, JPG, PNG or DWG · up to 25 MB each</p><span className="mt-4 inline-flex h-10 items-center rounded-md border border-[var(--rv-border)] bg-white px-4 text-sm font-semibold">Choose files</span></button>
                     {files.length > 0 && <div className="divide-y divide-[var(--rv-border)] rounded-lg border border-[var(--rv-border)]">{files.map((file) => { const key = `${file.name}-${file.lastModified}`; return <div key={key} className="flex items-center gap-3 p-3"><span className="grid h-9 w-9 place-items-center rounded-md bg-[var(--rv-bg)] text-[var(--rv-terracotta)]">{/\.(jpg|jpeg|png)$/i.test(file.name) ? <FileImage size={17} /> : <FileText size={17} />}</span><span className="min-w-0 flex-1 truncate text-sm font-semibold">{file.name}</span><span className="text-xs text-[var(--rv-ink-2)]">{(file.size / 1024 / 1024).toFixed(1)} MB</span><Button variant="ghost" size="icon" aria-label={`Remove ${file.name}`} onClick={() => setFiles((current) => current.filter((item) => `${item.name}-${item.lastModified}` !== key))}><X size={16} /></Button></div>; })}</div>}
@@ -244,7 +244,7 @@ export function ProjectWizard() {
                 )}
 
                 {step === 5 && (
-                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+                  <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
                     <div className="rounded-lg border border-[var(--rv-border)]"><div className="border-b border-[var(--rv-border)] p-5"><div className="flex items-center gap-2 text-xs font-semibold text-emerald-700"><CheckCircle2 size={15} /> Ready to publish</div><h3 className="font-display mt-2 text-2xl">{title}</h3><p className="mt-2 text-sm leading-6 text-[var(--rv-ink-2)]">{description}</p></div><dl className="grid sm:grid-cols-2"><ReviewItem label="Scope" value={selectedScopeTitle ?? "Not selected"} /><ReviewItem label="Specific requirement" value={selectedScope === "multi_room" ? selectedRooms.join(", ") : selectedScope === "custom" ? customRequirement : selectedSubtype} /><ReviewItem label="Location" value={`${locality}, ${city}`} /><ReviewItem label="Budget" value={budget} /><ReviewItem label="Timeline" value={timeline} /><ReviewItem label="Delivery route" value={fulfillmentPreference === "managed_execution" ? "Sajivo Managed Execution" : fulfillmentPreference === "independent_professional" ? "Marketplace professionals" : "Help me decide"} /><ReviewItem label="Files" value={files.length ? `${files.length} attached` : "No files attached"} /><div className="border-t border-[var(--rv-border)] p-5 sm:col-span-2"><dt className="text-xs font-bold uppercase text-[var(--rv-ink-2)]">Services</dt><dd className="mt-2 flex flex-wrap gap-2">{selectedServices.map((service) => <span key={service} className="rounded-full bg-[var(--rv-bg)] px-3 py-1 text-xs font-semibold">{service}</span>)}</dd></div></dl></div>
                     <aside className="rounded-lg bg-[var(--rv-slate)] p-5 text-white"><ClipboardCheck size={22} /><h3 className="font-display mt-4 text-xl">What happens next?</h3><ol className="mt-4 grid gap-4 text-sm text-white/75"><li className="flex gap-3"><span className="font-bold text-white">1</span>Verified professionals review your brief.</li><li className="flex gap-3"><span className="font-bold text-white">2</span>You receive itemised proposals.</li><li className="flex gap-3"><span className="font-bold text-white">3</span>Compare, discuss, and select the best fit.</li></ol></aside>
                   </div>
@@ -254,7 +254,7 @@ export function ProjectWizard() {
           </div>
 
           <footer className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-[var(--rv-border)] bg-white/95 px-4 py-4 backdrop-blur sm:px-8">
-            <Button variant="outline" disabled={step === 0} onClick={() => setStep((value) => Math.max(0, value - 1))}><ArrowLeft size={16} /><span className="hidden sm:inline">Back</span></Button>
+            <Button variant="outline" aria-label="Back" disabled={step === 0} onClick={() => setStep((value) => Math.max(0, value - 1))}><ArrowLeft size={16} /><span className="hidden sm:inline">Back</span></Button>
             <Button onClick={next} disabled={publishing}>{publishing ? <LoaderCircle className="animate-spin" size={16} /> : step === steps.length - 1 ? <><span>Publish project</span><CheckCircle2 size={16} /></> : <><span>Continue</span><ArrowRight size={16} /></>}</Button>
           </footer>
         </div>

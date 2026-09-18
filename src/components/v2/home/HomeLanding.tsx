@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Blocks, BriefcaseBusiness, Building2, Check, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Hammer, Handshake, Images, Layers3, MapPin, MessageSquareText, PaintRoller, PanelTop, Save, Search, ShieldCheck, Sparkles, WalletCards, X, type LucideIcon } from "lucide-react";
-import { materialCollections, projectCollections } from "@/lib/gallery";
+import { isGalleryImageAllowed, materialCollections, projectCollections } from "@/lib/gallery";
 import { SocialLinks } from "@/components/sajivo/SocialLinks";
 
 type Category = { title: string; description: string; icon: LucideIcon; href: string };
@@ -44,7 +44,12 @@ const materialPreviews = materialCollections.map((item) => ({ name: item.title, 
 export function HomeLanding({ workPhotos = [] }: { workPhotos?: WorkPhoto[] }) {
   const visibleWork: ReadonlyArray<WorkPhoto> = [
     ...propertyViews,
-    ...workPhotos.filter((item) => !propertyViews.some((curated) => curated.title.toLowerCase() === item.title.toLowerCase())),
+    ...workPhotos
+      .map((item) => {
+        const images = (item.images?.length ? item.images : [item.image]).filter(isGalleryImageAllowed);
+        return { ...item, image: images[0], images };
+      })
+      .filter((item) => item.image && !propertyViews.some((curated) => curated.title.toLowerCase() === item.title.toLowerCase())),
   ];
   const [selectedWork, setSelectedWork] = useState<WorkPhoto | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);

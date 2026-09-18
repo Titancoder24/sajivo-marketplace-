@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { LiveProjectWorkspace, type LiveProject } from "@/components/v2/projects/LiveProjectWorkspace";
@@ -11,7 +12,7 @@ export default async function V2ProjectWorkspacePage({ params }: { params: Promi
   if (!uuid.test(id)) notFound();
   const supabase = await createClient();
   if (!supabase) throw new Error("Supabase is not configured for this deployment.");
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getActiveUser(supabase);
   if (!auth.user) redirect(`/login?next=${encodeURIComponent(`/v2/projects/${id}`)}`);
   const { data: project, error } = await supabase.from("projects").select("id,title,description,status,scope,services,city,state,locality,budget_range,custom_budget,preferred_start_date,expected_timeline,created_at,updated_at").eq("id", id).maybeSingle();
   if (error || !project) notFound();

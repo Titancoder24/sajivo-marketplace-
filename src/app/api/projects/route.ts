@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getProjectsForRole } from "@/lib/server/repository";
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Project storage is unavailable. Please try again later." }, { status: 503 });
 
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const { data: authData, error: authError } = await getActiveUser(supabase);
   if (authError || !authData.user) return NextResponse.json({ error: "Sign in with a client account to publish a project." }, { status: 401 });
 
   const projectInsert = {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   APPROVED_SEO_CITIES,
@@ -8,6 +9,60 @@ import {
   toSeoSlug,
 } from "@/lib/seo/programmatic";
 import { getPlatformAdmin } from "@/lib/server/angel";
+
+const pageColumns = "id, state_name, city_name, service_name, route_path, title, status, quality_status, indexing_allowed, target_keywords, published_at, updated_at";
+type AdminAuth = NonNullable<Awaited<ReturnType<typeof getPlatformAdmin>>>;
+
+async function readPages(auth: AdminAuth) {
+  const pages = [];
+  for (let offset = 0; ; offset += 500) {
+    const { data, error } = await auth.supabase.from("seo_pages").select(pageColumns)
+      .order("id").range(offset, offset + 499);
+    if (error) return { data: null, error };
+    pages.push(...(data ?? []));
+    if (!data || data.length < 500) return { data: pages, error: null };
+  }
+}
+const publicationSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["draft", "published"]),
+  expectedUpdatedAt: z.string().min(1),
+}).strict();
+
+export async function PATCH(request: Request) {
+  try {
+    const auth = await getPlatformAdmin("super_admin");
+    if (!auth) return NextResponse.json({ error: "Super-admin access required" }, { status: 403 });
+    const parsed = publicationSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) return NextResponse.json({ error: "A valid page ID, publication status, and current version are required." }, { status: 400 });
+    const { id, status, expectedUpdatedAt } = parsed.data;
+    const { data: existing, error: readError } = await auth.supabase.from("seo_pages").select("*").eq("id", id).maybeSingle();
+    if (readError) return NextResponse.json({ error: "SEO page could not be loaded." }, { status: 500 });
+    if (!existing) return NextResponse.json({ error: "SEO page not found." }, { status: 404 });
+    if (existing.updated_at !== expectedUpdatedAt) return NextResponse.json({ error: "This page changed. Refresh the list before trying again." }, { status: 409 });
+    const published = status === "published";
+    const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+    const validRoute = [existing.state_slug, existing.city_slug, existing.service_slug].every((slug) => typeof slug === "string" && slugPattern.test(slug))
+      && existing.route_path === `/in/${existing.state_slug}/${existing.city_slug}/${existing.service_slug}`;
+    if (published && (!validRoute || !PROGRAMMATIC_SEO_TEMPLATES.some((template) => template.slug === existing.service_slug)
+      || ![existing.state_name, existing.city_name, existing.title, existing.meta_description, existing.h1, existing.introduction].every((value) => typeof value === "string" && value.trim()))) {
+      return NextResponse.json({ error: "Page needs valid location, supported service, route, and complete SEO content before publishing." }, { status: 422 });
+    }
+    const { data: page, error } = await auth.supabase.from("seo_pages").update({
+      status, indexing_allowed: published, quality_status: published ? "approved" : "needs_review",
+      published_at: published ? existing.published_at || new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id).eq("updated_at", expectedUpdatedAt).select(pageColumns).maybeSingle();
+    if (error) return NextResponse.json({ error: "Publication could not be saved. Please retry." }, { status: 500 });
+    if (!page) return NextResponse.json({ error: "This page changed. Refresh the list before trying again." }, { status: 409 });
+    revalidatePath("/in/[state]/[city]/[service]", "page");
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/seo-directory");
+    return NextResponse.json({ page });
+  } catch {
+    return NextResponse.json({ error: "Publication request failed. Refresh to confirm the saved status before retrying." }, { status: 500 });
+  }
+}
 
 const singleSchema = z.object({
   mode: z.literal("single").optional(),
@@ -28,11 +83,7 @@ export async function GET() {
   const auth = await getPlatformAdmin("super_admin");
   if (!auth) return NextResponse.json({ error: "Super-admin access required" }, { status: 403 });
   const [{ data: pages, error }, { count: keywordCount }, { data: jobs }] = await Promise.all([
-    auth.supabase
-      .from("seo_pages")
-      .select("id, state_name, city_name, service_name, route_path, title, status, quality_status, indexing_allowed, target_keywords, published_at, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(500),
+    readPages(auth),
     auth.supabase.from("seo_keyword_targets").select("id", { count: "exact", head: true }),
     auth.supabase.from("seo_generation_jobs").select("id,requested_count,generated_count,status,created_at,completed_at").order("created_at", { ascending: false }).limit(8),
   ]);
@@ -43,8 +94,8 @@ export async function GET() {
     templates: PROGRAMMATIC_SEO_TEMPLATES,
     highIntentRoutes: HIGH_INTENT_SEO_ROUTES.map((route) => ({
       ...route,
-      crawlStatus: "Crawlable",
-      indexable: true,
+      crawlStatus: "Requires publication",
+      indexable: false,
     })),
     approvedCities: APPROVED_SEO_CITIES.map((location) => ({
       name: location.city,
@@ -78,12 +129,13 @@ export async function POST(request: Request) {
 
   const stateSlug = toSeoSlug(stateName);
   const citySlug = toSeoSlug(cityName);
+  if (!stateSlug || !citySlug) return NextResponse.json({ error: "State and city must produce valid URL slugs." }, { status: 400 });
   const serviceSlug = content.slug;
   const routePath = `/in/${stateSlug}/${citySlug}/${serviceSlug}`;
   const timestamp = new Date().toISOString();
   const { data: page, error } = await auth.supabase
     .from("seo_pages")
-    .upsert(
+    .insert(
       {
         state_slug: stateSlug,
         state_name: stateName,
@@ -108,11 +160,13 @@ export async function POST(request: Request) {
         created_by: auth.userId,
         updated_at: timestamp,
       },
-      { onConflict: "state_slug,city_slug,service_slug" },
     )
     .select("id, route_path, title, status, target_keywords")
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: error.code === "23505" ? "This route already exists. Use its publish or unpublish action." : "Page could not be saved." }, { status: error.code === "23505" ? 409 : 500 });
+
+  revalidatePath(routePath);
+  revalidatePath("/sitemap.xml");
 
   const { error: keywordError } = await auth.supabase.from("seo_keyword_targets").upsert(
     content.keywords.map((keyword, index) => ({
@@ -136,6 +190,10 @@ export async function POST(request: Request) {
 async function createBulkPages(auth: NonNullable<Awaited<ReturnType<typeof getPlatformAdmin>>>, body: unknown) {
   const parsed = bulkSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Choose locations, supported templates, and a limit up to 2,000." }, { status: 400 });
+  if (parsed.data.locations.some(({ stateName, cityName }) => !toSeoSlug(stateName) || !toSeoSlug(cityName))
+    || parsed.data.serviceSlugs.some((slug) => !buildProgrammaticSeoContent(slug, "City", "State"))) {
+    return NextResponse.json({ error: "Every location and service must have a supported, valid URL slug." }, { status: 400 });
+  }
   const combinations = parsed.data.locations.flatMap((location) => parsed.data.serviceSlugs.map((serviceSlug) => ({ ...location, serviceSlug }))).slice(0, parsed.data.limit);
   const rows = combinations.flatMap(({ stateName, cityName, serviceSlug }) => {
     const content = buildProgrammaticSeoContent(serviceSlug, cityName, stateName);
@@ -149,7 +207,7 @@ async function createBulkPages(auth: NonNullable<Awaited<ReturnType<typeof getPl
   let generated = 0;
   try {
     for (let index = 0; index < rows.length; index += 200) {
-      const { data: pages, error } = await auth.supabase.from("seo_pages").upsert(rows.slice(index, index + 200), { onConflict: "state_slug,city_slug,service_slug" }).select("id,target_keywords");
+      const { data: pages, error } = await auth.supabase.from("seo_pages").upsert(rows.slice(index, index + 200), { onConflict: "state_slug,city_slug,service_slug", ignoreDuplicates: true }).select("id,target_keywords");
       if (error) throw error;
       generated += pages?.length ?? 0;
       const keywords = (pages ?? []).flatMap((page) => page.target_keywords.map((keyword: string, keywordIndex: number) => ({ page_id: page.id, keyword, intent: keyword.includes("near me") ? "local" : "commercial", priority: Math.max(70, 90 - keywordIndex * 5) })));

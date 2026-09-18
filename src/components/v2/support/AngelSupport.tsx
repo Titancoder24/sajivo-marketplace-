@@ -161,15 +161,83 @@ function MessageBubble({ message }: { message: Message }) {
 
 function CallbackForm({ conversationId, onDone }: { conversationId: string | null; onDone: () => void }) {
   const [submitting, setSubmitting] = useState(false);
+  const [loadingContact, setLoadingContact] = useState(true);
+  const [contact, setContact] = useState({ name: "", phone: "", email: "" });
+  const [method, setMethod] = useState("phone");
+  const [error, setError] = useState("");
+  const needsPhone = method === "phone" || method === "whatsapp";
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadContact() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store", signal: controller.signal });
+        const payload = await response.json();
+        if (response.ok && !controller.signal.aborted) {
+          const profile = payload.profile;
+          setContact({
+            name: typeof profile?.full_name === "string" ? profile.full_name : "",
+            phone: typeof profile?.phone === "string" ? profile.phone : "",
+            email: typeof profile?.email === "string" ? profile.email : "",
+          });
+        }
+      } catch {
+        // Contact entry remains available if profile prefill cannot be loaded.
+      } finally {
+        if (!controller.signal.aborted) setLoadingContact(false);
+      }
+    }
+    void loadContact();
+    return () => controller.abort();
+  }, []);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setSubmitting(true);
+    event.preventDefault();
+    if (submitting || loadingContact) return;
     const data = new FormData(event.currentTarget);
-    const response = await fetch("/api/v2/angel/callbacks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId, reason: data.get("reason"), preferredDate: data.get("date"), timeWindow: data.get("window"), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, communicationMethod: data.get("method") }) });
-    const payload = await response.json().catch(() => ({})); setSubmitting(false);
-    if (!response.ok) { toast.error(payload.error || "Could not request callback"); return; }
-    toast.success(`Callback ${payload.callback.public_id} requested`); onDone();
+    const contactName = contact.name.trim();
+    const contactPhone = contact.phone.trim();
+    const contactEmail = contact.email.trim();
+    if (contactName.length < 2) { setError("Enter your contact name (at least 2 characters)."); return; }
+    const digits = contactPhone.replace(/\D/g, "");
+    if ((needsPhone && !contactPhone) || (contactPhone && (!/^\+?[\d\s().-]+$/.test(contactPhone) || digits.length < 7 || digits.length > 15))) {
+      setError("Enter a valid phone number with 7 to 15 digits."); return;
+    }
+    if (!needsPhone && !contactEmail) { setError("An email address is required for Email or Video."); return; }
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await fetch("/api/v2/angel/callbacks", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId, contactName, contactPhone, contactEmail, reason: data.get("reason"), preferredDate: data.get("date"), timeWindow: data.get("window"), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, communicationMethod: method }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.callback?.public_id) {
+        setError(payload.error || "Could not request callback. Please retry."); return;
+      }
+      toast.success(`Callback ${payload.callback.public_id} requested`);
+      onDone();
+    } catch {
+      setError("Could not reach support. Your details are still here; please retry.");
+    } finally {
+      setSubmitting(false);
+    }
   }
-  return <form onSubmit={submit} className="mt-3 space-y-3 rounded-md border border-[#ecd9d3] bg-[#fff8f5] p-3"><label className="block text-[10px] font-bold">Reason<textarea name="reason" required minLength={5} rows={3} className="mt-1 w-full resize-none rounded border border-[#dccfc9] bg-white p-2 text-xs outline-none" /></label><label className="block text-[10px] font-bold">Preferred date<input name="date" type="date" required min={new Date().toISOString().slice(0, 10)} className="mt-1 h-9 w-full rounded border border-[#dccfc9] bg-white px-2 text-xs" /></label><label className="block text-[10px] font-bold">Time window<select name="window" className="mt-1 h-9 w-full rounded border border-[#dccfc9] bg-white px-2 text-xs"><option>09:00–12:00</option><option>12:00–15:00</option><option>15:00–18:00</option></select></label><label className="block text-[10px] font-bold">Contact method<select name="method" className="mt-1 h-9 w-full rounded border border-[#dccfc9] bg-white px-2 text-xs"><option value="phone">Phone</option><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="video">Video</option></select></label><button disabled={submitting} className="flex h-9 w-full items-center justify-center gap-2 rounded bg-[#d65f45] text-xs font-bold text-white shadow-[0_2px_0_#a44331] disabled:opacity-50">{submitting ? <Loader2 className="animate-spin" size={14} /> : <PhoneCall size={14} />}Request callback</button></form>;
+
+  const inputClass = "mt-1 h-9 w-full min-w-0 rounded border border-[#dccfc9] bg-white px-2 text-xs";
+  return <form onSubmit={submit} className="mt-3 border-t border-[#ecd9d3] pt-3">
+    <fieldset disabled={submitting || loadingContact} className="min-w-0 space-y-3">
+      <label className="block text-[10px] font-bold">Contact name<input name="contactName" autoComplete="name" required minLength={2} maxLength={120} value={contact.name} onChange={(event) => setContact((current) => ({ ...current, name: event.target.value }))} className={inputClass} /></label>
+      <label className="block text-[10px] font-bold">Contact method<select name="method" value={method} onChange={(event) => { setMethod(event.target.value); setError(""); }} className={inputClass}><option value="phone">Phone</option><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="video">Video</option></select></label>
+      <label className="block text-[10px] font-bold">Phone number{needsPhone ? " (required)" : " (optional)"}<input name="contactPhone" type="tel" autoComplete="tel" required={needsPhone} maxLength={30} value={contact.phone} onChange={(event) => setContact((current) => ({ ...current, phone: event.target.value }))} className={inputClass} /></label>
+      <label className="block text-[10px] font-bold">{method === "video" ? "Video invitation email" : "Email address"}{needsPhone ? " (optional)" : " (required)"}<input name="contactEmail" type="email" autoComplete="email" required={!needsPhone} maxLength={254} value={contact.email} onChange={(event) => setContact((current) => ({ ...current, email: event.target.value }))} className={inputClass} /></label>
+      <label className="block text-[10px] font-bold">Reason<textarea name="reason" required minLength={5} maxLength={2000} rows={3} className="mt-1 w-full resize-none rounded border border-[#dccfc9] bg-white p-2 text-xs outline-none" /></label>
+      <label className="block text-[10px] font-bold">Preferred date<input name="date" type="date" required min={new Date().toISOString().slice(0, 10)} className={inputClass} /></label>
+      <label className="block text-[10px] font-bold">Time window<select name="window" className={inputClass}><option>09:00–12:00</option><option>12:00–15:00</option><option>15:00–18:00</option></select></label>
+      <button disabled={submitting || loadingContact} className="flex h-9 w-full items-center justify-center gap-2 rounded bg-[#d65f45] text-xs font-bold text-white shadow-[0_2px_0_#a44331] disabled:opacity-50">{submitting || loadingContact ? <Loader2 className="animate-spin" size={14} /> : <PhoneCall size={14} />}{loadingContact ? "Loading contact..." : "Request callback"}</button>
+    </fieldset>
+    {error && <p role="alert" className="mt-3 text-xs text-red-700">{error}</p>}
+  </form>;
 }
 
 function AuthRequired() {

@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -40,7 +41,7 @@ async function context(params: Promise<{ projectId: string; taskId: string }>) {
         { status: 503 },
       ),
     };
-  const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await getActiveUser(supabase);
   if (error || !data.user)
     return {
       error: NextResponse.json(

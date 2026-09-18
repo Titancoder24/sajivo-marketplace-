@@ -1,10 +1,11 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { CreditCard, Info, Sparkles } from "lucide-react";
 import { DashboardHeader } from "@/components/sajivo/DashboardBlocks";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CreditsPage() {
   const supabase = await createClient();
-  const { data: auth } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+  const { data: auth } = supabase ? await getActiveUser(supabase) : { data: { user: null } };
   const { data: wallets } = supabase && auth.user
     ? await supabase.from("credit_wallets").select("credit_type, plan_name, included_remaining, included_limit, top_up_remaining, reset_at").eq("account_id", auth.user.id)
     : { data: null };

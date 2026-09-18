@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +19,7 @@ export async function PATCH(request: Request) {
 
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Profile service is unavailable." }, { status: 503 });
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getActiveUser(supabase);
   if (!auth.user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
   const { data, error } = await supabase

@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -13,7 +14,7 @@ export default async function V2ProjectsPage() {
   const supabase = await createClient();
   let projectId: string | undefined;
   if (supabase) {
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth } = await getActiveUser(supabase);
     if (auth.user) {
       const { data } = await supabase
         .from("projects")

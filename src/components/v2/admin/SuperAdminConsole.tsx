@@ -12,6 +12,7 @@ import {
 import { AnalyticsPanel, IntegrationsPanel, SeoPanel } from "./AdminGrowthPanels";
 import { ContactSettingsPanel } from "./ContactSettingsPanel";
 import { BulkSeoStudioPanel } from "./BulkSeoStudioPanel";
+import { AccountsPanel, SupportWorkPanel } from "./OperationsPanels";
 
 type Overview = {
   admin: { role: string; permissions: string[] };
@@ -22,13 +23,15 @@ type Overview = {
 };
 
 type ThreadDetail = { conversation: Overview["conversations"][number] & { summary?: string | null }; messages: Array<{ id: string; sender: string; content: string; safety_flags: string[]; created_at: string }> };
-type Section = "overview" | "analytics" | "conversations" | "tickets" | "knowledge" | "seo" | "seo-bulk" | "contact" | "integrations";
+type Section = "overview" | "analytics" | "conversations" | "tickets" | "callbacks" | "users" | "knowledge" | "seo" | "seo-bulk" | "contact" | "integrations";
 
 const sectionNav = [
   { key: "overview", label: "Overview", Icon: LayoutDashboard },
   { key: "analytics", label: "Analytics", Icon: BarChart3 },
   { key: "conversations", label: "Conversations", Icon: MessageSquareText },
   { key: "tickets", label: "Support tickets", Icon: TicketCheck },
+  { key: "callbacks", label: "Callbacks", Icon: CalendarClock },
+  { key: "users", label: "Users", Icon: UsersRound },
   { key: "knowledge", label: "Knowledge base", Icon: BookOpenCheck },
   { key: "seo", label: "SEO & GEO", Icon: Globe2 },
   { key: "seo-bulk", label: "Bulk SEO studio", Icon: Layers3 },
@@ -86,7 +89,9 @@ export function SuperAdminConsole() {
             {section === "overview" ? <OverviewPanel data={data} onThread={openThread} /> : null}
             {section === "analytics" ? <AnalyticsPanel /> : null}
             {section === "conversations" ? <ConversationsPanel data={data} selected={selectedThread} onThread={openThread} onRefresh={load} /> : null}
-            {section === "tickets" ? <TicketsPanel data={data} /> : null}
+            {section === "tickets" ? <SupportWorkPanel key="tickets" kind="tickets" /> : null}
+            {section === "callbacks" ? <SupportWorkPanel key="callbacks" kind="callbacks" /> : null}
+            {section === "users" ? <AccountsPanel /> : null}
             {section === "knowledge" ? <KnowledgePanel data={data} selected={selectedArticle} onSelect={setSelectedArticle} onRefresh={load} /> : null}
             {section === "seo" ? <SeoPanel /> : null}
             {section === "seo-bulk" ? <BulkSeoStudioPanel /> : null}

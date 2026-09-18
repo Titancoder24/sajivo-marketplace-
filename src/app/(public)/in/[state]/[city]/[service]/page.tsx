@@ -11,7 +11,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import {
-  APPROVED_SEO_CITIES,
   buildProgrammaticSeoContent,
   PROGRAMMATIC_SEO_SLUGS,
   type SeoFaq,
@@ -40,35 +39,6 @@ type SeoPage = {
 
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://sajivo-app.vercel.app").replace(/\/$/, "");
 
-function getApprovedFallback(params: Params): SeoPage | null {
-  const location = APPROVED_SEO_CITIES.find(
-    (item) => item.stateSlug === params.state && item.citySlug === params.city,
-  );
-  if (!location || !PROGRAMMATIC_SEO_SLUGS.includes(params.service)) return null;
-
-  const content = buildProgrammaticSeoContent(params.service, location.city, location.state);
-  if (!content || content.slug !== params.service) return null;
-
-  const routePath = `/in/${location.stateSlug}/${location.citySlug}/${content.slug}`;
-  return {
-    id: `approved:${location.citySlug}:${content.slug}`,
-    state_slug: location.stateSlug,
-    state_name: location.state,
-    city_slug: location.citySlug,
-    city_name: location.city,
-    service_slug: content.slug,
-    service_name: content.serviceName,
-    route_path: routePath,
-    title: content.title,
-    meta_description: content.description,
-    h1: content.h1,
-    introduction: content.introduction,
-    local_insights: content.localInsights,
-    faq: content.faq,
-    canonical_url: `${appUrl}${routePath}`,
-  };
-}
-
 async function getPage(params: Params) {
   const supabase = await createClient();
   if (supabase) {
@@ -83,7 +53,7 @@ async function getPage(params: Params) {
       .maybeSingle();
     if (data) return data as SeoPage;
   }
-  return getApprovedFallback(params);
+  return null;
 }
 
 async function getRelatedPages(page: SeoPage) {
@@ -95,20 +65,14 @@ async function getRelatedPages(page: SeoPage) {
       .eq("state_slug", page.state_slug)
       .eq("city_slug", page.city_slug)
       .eq("status", "published")
+      .eq("indexing_allowed", true)
       .in("service_slug", PROGRAMMATIC_SEO_SLUGS)
       .neq("id", page.id)
       .limit(4);
     if (data?.length) return data;
   }
 
-  return PROGRAMMATIC_SEO_SLUGS
-    .filter((slug) => slug !== page.service_slug)
-    .slice(0, 4)
-    .map((slug) => ({
-      route_path: `/in/${page.state_slug}/${page.city_slug}/${slug}`,
-      service_slug: slug,
-      service_name: buildProgrammaticSeoContent(slug, page.city_name, page.state_name)?.serviceName ?? slug,
-    }));
+  return [];
 }
 
 function pageContent(page: SeoPage) {
@@ -151,7 +115,7 @@ function pageContent(page: SeoPage) {
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const page = await getPage(await params);
-  if (!page) return {};
+  if (!page) return { robots: { index: false, follow: false } };
   const content = pageContent(page);
   const canonical = page.canonical_url || `${appUrl}${page.route_path}`;
   return {

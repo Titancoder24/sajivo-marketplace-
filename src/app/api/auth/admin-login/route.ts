@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveUser } from "@/lib/supabase/account-access";
 
 const schema = z.object({
   email: z.email(),
@@ -16,6 +17,11 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase.auth.signInWithPassword(input.data);
   if (error || !data.user) return NextResponse.json({ error: "Invalid administrator credentials." }, { status: 401 });
+  const access = await getActiveUser(supabase);
+  if (access.error || !access.data.user) {
+    await supabase.auth.signOut({ scope: "local" });
+    return NextResponse.json({ error: access.error?.message || "Account access denied." }, { status: access.error?.status || 403 });
+  }
 
   const { data: admin } = await supabase
     .from("platform_admins")

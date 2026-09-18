@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Password recovery is not configured." }, { status: 503 });
-  const { data } = await supabase.auth.getUser();
+  const { data } = await getActiveUser(supabase);
   if (!data.user) return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 401 });
 
   const { error } = await supabase.auth.updateUser({ password: result.data.password });

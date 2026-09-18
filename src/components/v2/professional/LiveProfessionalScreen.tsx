@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BarChart3, BriefcaseBusiness, FileText, FolderKanban, IndianRupee, Settings, Users } from "lucide-react";
@@ -22,7 +23,7 @@ function Status({ value }: { value: string }) { return <span className="rounded-
 
 export async function LiveProfessionalScreen({ mode }: { mode: ProfessionalMode }) {
   const supabase=await createClient(); if(!supabase)redirect("/login");
-  const {data:auth}=await supabase.auth.getUser(); if(!auth.user)redirect("/login"); const id=auth.user.id;
+  const {data:auth}=await getActiveUser(supabase); if(!auth.user)redirect("/login"); const id=auth.user.id;
   const [profileResult,opportunitiesResult,proposalsResult,projectsResult,documentsResult,paymentsResult,teamResult]=await Promise.all([
     supabase.from("profiles").select("full_name,business_name,email,primary_role,business_role,verification_status,account_status,account_public_id,city,state").eq("id",id).single(),
     supabase.from("opportunities").select("id,public_id,status,response_deadline,created_at,requirement:requirements!requirement_id(title,project_type,budget,location)").eq("professional_id",id).order("created_at",{ascending:false}),

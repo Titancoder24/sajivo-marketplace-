@@ -1,3 +1,4 @@
+import { getActiveUser } from "@/lib/supabase/account-access";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, Bell, BriefcaseBusiness, FileText, FolderKanban, IndianRupee, MessageSquare, Plus, ShieldCheck, Star, UserRound } from "lucide-react";
@@ -37,7 +38,7 @@ async function rowsWhen<T>(needed: boolean, query: PromiseLike<{ data: T[] | nul
 export async function LiveClientScreen({ mode }: { mode: Mode }) {
   const supabase = await createClient();
   if (!supabase) redirect("/login");
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getActiveUser(supabase);
   if (!auth.user) redirect("/login");
   const userId = auth.user.id;
 

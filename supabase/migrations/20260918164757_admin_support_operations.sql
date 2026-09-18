@@ -1,3 +1,4 @@
+-- Remote migration version confirmed through Supabase MCP.
 -- Contact snapshots preserve the details supplied with each callback request.
 alter table public.support_callback_requests
   add column if not exists contact_name text,
